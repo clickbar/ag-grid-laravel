@@ -140,12 +140,14 @@ On the backend side, your model must implement the `AgGridCustomFilterable` inte
 ```php
 class Flamingo extends Model implements AgGridCustomFilterable {
 
+    use SoftDeletes;
+
     // ... your model definitions
     
     public function applyAgGridCustomFilters(Builder $query, array $params): void
     {
-        $query->when($params['showArchived'] ?? false, function ($query) {
-            return $query->withArchived();
+        $query->when($params['showTrashed'] ?? false, function ($query) {
+            return $query->withTrashed();
         });
     }
 }
