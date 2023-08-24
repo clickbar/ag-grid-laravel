@@ -181,6 +181,13 @@ interface AgGridGetRowsRequest extends IServerSideGetRowsRequest {
 - Does not support server-side grouping for AG Grid's pivot mode
 - Filtering for values in relations is only supported one level deep. E.g you can filter for `relation.value` but not `relation.otherRelation.value` 
 
+## TODOs
+
+- [ ] Implement set filter for nested json fields
+- [ ] Implement multiple conditions per filter (`AND`, `OR`)
+- [ ] Add type-safe data structures for selection and request data
+- [ ] Test with mysql
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.

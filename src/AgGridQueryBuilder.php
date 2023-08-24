@@ -59,6 +59,8 @@ class AgGridQueryBuilder implements Responsable
     }
 
     /**
+     * Returns a new AgGridQueryBuilder for an AgGridGetRowsRequest.
+     *
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
      */
     public static function forRequest(AgGridGetRowsRequest $request, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
@@ -67,6 +69,8 @@ class AgGridQueryBuilder implements Responsable
     }
 
     /**
+     * Returns a new AgGridQueryBuilder for a selection.
+     *
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
      */
     public static function forSelection(array $selection, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
