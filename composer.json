@@ -1,5 +1,5 @@
 {
-    "name": "clickbar/laravel-ag-grid",
+    "name": "clickbar/ag-grid-laravel",
     "description": "AG Grid server-side adapter for Laravel.",
     "keywords": [
         "clickbar",
