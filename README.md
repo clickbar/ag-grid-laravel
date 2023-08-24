@@ -186,6 +186,8 @@ However, here are some examples that you may use as a starting point four your o
 
 ### Creating a DataSource
 
+In order to use the server-side row model, you must create a data source. Here is an exemplary implementation of such one:
+
 ```typescript
  function makeDataSource<T>(
     url: string,
@@ -214,6 +216,8 @@ However, here are some examples that you may use as a starting point four your o
 ```
 
 ### Triggering a server-side export
+
+Server-side exports are not implemented in AG Grid by default. However you can create a custom context menu or add a button somewhere that triggers the server-side export. The handler function may look something like this:
 
 ```typescript
 async function exportServerSide(grid: GridApi, format: 'excel' | 'csv' | 'tsv', onlySelected: boolean) {
@@ -246,13 +250,14 @@ async function exportServerSide(grid: GridApi, format: 'excel' | 'csv' | 'tsv', 
 
 ### Tracking selection state
 
+If you want to use server-side selects, you must track the current selection and filter state of the grid:
+
 ```typescript
 
 // use the selection in any batch requests to the server
 let selection: AgGridSelection 
 
 function onSelectionChanged(event: SelectionChangedEvent) {
-
     if (event.api.getModel().getType() !== 'serverSide') {
         throw new Error('Only the serverSide row model is supported.')
     }
@@ -262,7 +267,7 @@ function onSelectionChanged(event: SelectionChangedEvent) {
         rowModel: 'serverSide',
         selectAll: selectionState.selectAll,
         toggledNodes: selectionState.toggledNodes,
-        filterModel: api.getFilterModel()
+        filterModel: event.api.getFilterModel()
     }
 }
 
