@@ -26,6 +26,7 @@ class Flamingo extends Model implements AgGridExportable, AgGridCustomFilterable
         'weight' => 'float',
         'preferred_food_types' => 'array',
         'last_vaccinated_on' => 'date',
+        'custom_properties' => 'array',
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
     ];

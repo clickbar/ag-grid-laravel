@@ -50,6 +50,7 @@ class TestCase extends Orchestra
             $table->string('name');
             $table->float('weight');
             $table->jsonb('preferred_food_types');
+            $table->jsonb('custom_properties')->nullable();
             $table->date('last_vaccinated_on')->nullable();
             $table->boolean('is_hungry')->default(false);
             $table->softDeletes();

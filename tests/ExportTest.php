@@ -63,3 +63,17 @@ it('only exports selected columns', function () {
 
     $response->assertDownload('export.csv');
 });
+
+it('does not crash when a non-existing column is requested', function () {
+    $queryBuilder = new AgGridQueryBuilder(
+        [
+            'exportFormat' => 'csv',
+            'exportColumns' => ['id', 'does_not_exist'],
+        ],
+        Flamingo::class,
+    );
+
+    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request()));
+
+    $response->assertDownload('export.csv');
+});

@@ -255,18 +255,21 @@ class AgGridQueryBuilder implements Responsable
 
     protected function addSetFilterToQuery(EloquentBuilder|Relation $subject, string $column, array $filter): void
     {
+        $isJsonColumn = $this->isJsonColumn($column);
         $column = $this->toJsonPath($column);
         $values = $filter['values'];
         $all = $filter['all'] ?? false;
         $filteredValues = array_filter($values, fn ($value) => $value !== null);
 
-        $subject->where(function (EloquentBuilder $query) use ($all, $column, $values, $filteredValues) {
+        $subject->where(function (EloquentBuilder $query) use ($all, $column, $values, $filteredValues, $isJsonColumn) {
             if (count($filteredValues) !== count($values)) {
                 // there was a null in there
                 $query->whereNull($column);
             }
 
-            if ($this->isJsonColumn($column)) {
+            if ($isJsonColumn) {
+                // TODO: this does not work at the moment because laravel has no support for the ?& and ?| operators
+                // TODO: find a workaround!
                 $query->orWhere(
                     $column,
                     $all ? '?&' : '?|', '{'.implode(',', $filteredValues).'}',
