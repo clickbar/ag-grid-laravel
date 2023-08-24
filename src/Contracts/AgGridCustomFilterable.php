@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 
 interface AgGridCustomFilterable
 {
-    public function applyAgGridCustomFilters(EloquentBuilder $query, array $params): void;
+    public function applyAgGridCustomFilters(EloquentBuilder $query, array $filters): void;
 }

@@ -144,9 +144,9 @@ class Flamingo extends Model implements AgGridCustomFilterable {
 
     // ... your model definitions
     
-    public function applyAgGridCustomFilters(Builder $query, array $params): void
+    public function applyAgGridCustomFilters(Builder $query, array $filters): void
     {
-        $query->when($params['showTrashed'] ?? false, function ($query) {
+        $query->when($filters['showTrashed'] ?? false, function ($query) {
             return $query->withTrashed();
         });
     }

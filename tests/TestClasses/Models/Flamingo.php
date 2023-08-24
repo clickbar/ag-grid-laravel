@@ -35,9 +35,9 @@ class Flamingo extends Model implements AgGridExportable, AgGridCustomFilterable
         return $this->belongsTo(Keeper::class);
     }
 
-    public function applyAgGridCustomFilters(EloquentBuilder $query, array $params): void
+    public function applyAgGridCustomFilters(EloquentBuilder $query, array $filters): void
     {
-        $query->when($params['withTrashed'] ?? false, function ($query) {
+        $query->when($filters['withTrashed'] ?? false, function ($query) {
             return $query->withTrashed();
         });
     }
