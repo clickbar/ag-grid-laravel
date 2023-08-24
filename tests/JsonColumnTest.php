@@ -20,9 +20,9 @@ beforeEach(function () {
                 'age' => 3,
                 'nature' => [
                     'friendly',
-                    'goofy'
-                ]
-            ]
+                    'goofy',
+                ],
+            ],
         ])
         ->for($this->keeper)
         ->create();
@@ -77,4 +77,3 @@ it('handles json columns in number filters', function () {
 
     expect($queryBuilder->get()->count())->toBe($this->customFlamingos->count());
 });*/
-
