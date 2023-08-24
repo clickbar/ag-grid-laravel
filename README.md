@@ -63,7 +63,7 @@ In this case, you may pass the current selection state of the grid to the server
 To do so, add the following to your request:
 
 ```php
-class FeedFlamingosRequest  extends Controller
+class FeedFlamingosRequest extends FormRequest
 {
     public function rules(): array
     {
@@ -78,7 +78,7 @@ class FeedFlamingosRequest  extends Controller
 In your controller, use the `AgGridQueryBuilder` to resolve the selection:
 
 ```php
-class FeedFlamingosController extends FormRequest
+class FeedFlamingosController extends Controller
 {
     public function __invoke(FeedFlamingsRequest $request): AgGridQueryBuilder
     {
