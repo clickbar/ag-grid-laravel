@@ -161,9 +161,9 @@ for implementing the requests on the frontend:
 ```typescript
 interface AgGridSelection {
     rowModel: 'serverSide' | 'clientSide'
-    filterModel: any
     selectAll: boolean
     toggledNodes: (string | number)[]
+    filterModel?: any
     customFilters?: any
 }
 
@@ -172,7 +172,109 @@ interface AgGridGetRowsRequest extends IServerSideGetRowsRequest {
     exportColumns?: string[]
     customFilters?: any
 }
+
+interface AgGridGetRowsResponse<T> {
+    total: number
+    data: T[]
+}
 ```
+
+## Frontend implementation
+
+You are free to use any frontend technology or framework of your choice.
+However, here are some examples that you may use as a starting point four your own implementation
+
+### Creating a DataSource
+
+```typescript
+ function makeDataSource<T>(
+    url: string,
+    customFilters?: Record<string, any>
+): IServerSideDatasource {
+    return {
+        // called by the grid when more rows are required
+        async getRows(parameters) {
+            const request = {
+                ...parameters.request,
+                customFilters,
+            }
+            // get data for request from server
+            try {
+                const response = await axios.post<AgGridGetRowsResponse<T>>(url, request)
+                parameters.success({
+                    rowData: response.data.data,
+                    rowCount: response.data.total,
+                })
+            } catch {
+                parameters.fail()
+            }
+        },
+    }
+}
+```
+
+### Triggering a server-side export
+
+```typescript
+async function exportServerSide(grid: GridApi, format: 'excel' | 'csv' | 'tsv', onlySelected: boolean) {
+    // using a private api here to oget the ssrm parameters
+    const parameters = api.getModel().getRootStore().getSsrmParams()
+    // only request the visible columns
+    const cols = columnApi?.getAllDisplayedColumns().map((column) => column.getColId())
+    // download the file
+    const response = await axios.post(
+        props.dataSourceUrl!,
+        {
+            ...parameters,
+            ...(onlySelected ? api.getServerSideSelectionState() : {}),
+            exportFormat: format,
+            exportColumns: cols,
+        },
+        {
+            responseType: 'blob',
+        }
+    )
+    // create an object url from the response
+    const url = URL.createObjectURL(response.data)
+    // create a link to trigger the download
+    const a = document.createElement('a')
+    a.href = url
+    a.download = true
+    a.click()
+}
+```
+
+### Tracking selection state
+
+```typescript
+
+// use the selection in any batch requests to the server
+let selection: AgGridSelection 
+
+function onSelectionChanged(event: SelectionChangedEvent) {
+
+    if (event.api.getModel().getType() !== 'serverSide') {
+        throw new Error('Only the serverSide row model is supported.')
+    }
+    
+    const selectionState = event.api.getServerSideSelectionState() as IServerSideSelectionState
+    selection = {
+        rowModel: 'serverSide',
+        selectAll: selectionState.selectAll,
+        toggledNodes: selectionState.toggledNodes,
+        filterModel: api.getFilterModel()
+    }
+}
+
+function onFilterChanged(event: FilterChangedEvent) {
+    if (!selection) {
+        return
+    }
+    
+    selection.filterModel = event.api.getFilterModel()
+}
+```
+
 
 ## Limitations
 
