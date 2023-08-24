@@ -24,9 +24,11 @@ class AgGridExport implements FromQuery, WithHeadings, WithColumnFormatting, Sho
 
     private readonly AgGridFormatterContext $context;
 
+    private readonly array $columnsToExport;
+
     public function __construct(
         private readonly Builder|Relation $queryBuilder,
-        private readonly array $columnsToExport
+        array $columnsToExport = null
     ) {
         $model = $this->queryBuilder->getModel();
 
@@ -35,6 +37,8 @@ class AgGridExport implements FromQuery, WithHeadings, WithColumnFormatting, Sho
         }
 
         $this->columnDefinitions = collect($model->getAgGridColumnDefinitions())->keyBy('id');
+
+        $this->columnsToExport = $columnsToExport ?? $this->columnDefinitions->keys()->all();
 
         $timezone = null;
         $timezoneProviderClass = config('ag-grid.export_timezone_provider');

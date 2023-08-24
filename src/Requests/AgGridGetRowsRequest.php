@@ -16,7 +16,7 @@ class AgGridGetRowsRequest extends FormRequest
             'filterModel' => ['sometimes', 'array'],
             'sortModel' => ['sometimes', 'array'],
             'exportFormat' => ['string', 'in:excel,csv'],
-            'exportCols' => ['array'],
+            'exportColumns' => ['array'],
             'rowModel' => ['sometimes', new Enum(AgGridRowModel::class)],
             'selectAll' => ['sometimes', 'boolean'],
             'toggledNodes' => ['sometimes', 'array'],

@@ -38,7 +38,7 @@ class AgGridQueryBuilder implements Responsable
     /**
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
      */
-    protected function __construct(array $params, EloquentBuilder|Relation|Model|string $subject)
+    public function __construct(array $params, EloquentBuilder|Relation|Model|string $subject)
     {
         if (is_a($subject, Model::class, true)) {
             $subject = $subject::query();
@@ -125,8 +125,8 @@ class AgGridQueryBuilder implements Responsable
             };
 
             return Excel::download(
-                new AgGridExport($this->subject, $this->params['exportCols']),
-                'export',
+                new AgGridExport($this->subject, $this->params['exportColumns'] ?? null),
+                'export.'.strtolower($writerType),
                 $writerType
             );
         }
@@ -244,8 +244,8 @@ class AgGridQueryBuilder implements Responsable
 
     protected function addFilterToQuery(EloquentBuilder|Relation $subject, string $column, array $filter): void
     {
-        $type = AgGridFilterType::from($filter['type']);
-        match ($type) {
+        $filterType = AgGridFilterType::from($filter['filterType']);
+        match ($filterType) {
             AgGridFilterType::Set => $this->addSetFilterToQuery($subject, $column, $filter),
             AgGridFilterType::Text => $this->addTextFilterToQuery($subject, $column, $filter),
             AgGridFilterType::Number => $this->addNumberFilterToQuery($subject, $column, $filter),
@@ -308,7 +308,7 @@ class AgGridQueryBuilder implements Responsable
             AgGridNumberFilterType::GreaterThanOrEqual => $subject->where($column, '>=', $value),
             AgGridNumberFilterType::LessThan => $subject->where($column, '<', $value),
             AgGridNumberFilterType::LessThanOrEqual => $subject->where($column, '<=', $value),
-            AgGridNumberFilterType::InRange => $subject->where($column, '>=', $value)->where($column, '<=', $value),
+            AgGridNumberFilterType::InRange => $subject->where($column, '>=', $value)->where($column, '<=', $filter['filterTo']),
             AgGridNumberFilterType::Blank => $subject->whereNull($column),
             AgGridNumberFilterType::NotBlank => $subject->whereNotNull($column),
         };

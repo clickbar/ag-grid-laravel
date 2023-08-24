@@ -4,5 +4,5 @@ namespace Clickbar\AgGrid\Contracts;
 
 interface AgGridExportTimezoneProvider
 {
-    public function getAgGridExportTimezone(): ?string;
+    public function getAgGridExportTimezone(): ?\DateTimeZone;
 }

@@ -6,8 +6,12 @@ use Clickbar\AgGrid\Contracts\AgGridExportTimezoneProvider;
 
 class AgGridDefaultExportTimezoneProvider implements AgGridExportTimezoneProvider
 {
-    public function getAgGridExportTimezone(): string
+    public function getAgGridExportTimezone(): ?\DateTimeZone
     {
-        return config('app.timezone');
+        try {
+            return new \DateTimeZone(config('app.timezone'));
+        } catch (\Exception $exception) {
+            return null;
+        }
     }
 }

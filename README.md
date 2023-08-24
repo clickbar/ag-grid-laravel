@@ -169,7 +169,7 @@ interface AgGridSelection {
 
 interface AgGridGetRowsRequest extends IServerSideGetRowsRequest {
     exportFormat?: 'excel' | 'csv' | 'tsv'
-    exportCols?: string[]
+    exportColumns?: string[]
     customFilters?: any
 }
 ```
