@@ -119,10 +119,12 @@ class AgGridQueryBuilder implements Responsable
     {
         $column = Arr::get($this->params, 'column');
         if ($column == null) {
+            // TODO: Consider custom exception
             throw new \Exception("To SetValues can only be called from AFFridSetValueRequest or when params contains 'column'");
         }
 
         if (collect($allowedColumns)->first() !== '*' && ! in_array($column, $allowedColumns)) {
+            // TODO: Consider custom exception
             throw new \Exception("Set value for column $column is not available or cannot be accessed");
         }
 
