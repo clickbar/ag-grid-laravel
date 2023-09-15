@@ -10,6 +10,7 @@ use Clickbar\AgGrid\Enums\AgGridNumberFilterType;
 use Clickbar\AgGrid\Enums\AgGridRowModel;
 use Clickbar\AgGrid\Enums\AgGridTextFilterType;
 use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
+use Clickbar\AgGrid\Requests\AgGridSetValuesRequest;
 use Clickbar\AgGrid\Support\ColumnMetadata;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\ForwardsCalls;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -69,6 +72,16 @@ class AgGridQueryBuilder implements Responsable
     }
 
     /**
+     * Returns a new AgGridQueryBuilder for an AgGridGetRowsRequest.
+     *
+     * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
+     */
+    public static function forSetValuesRequest(AgGridSetValuesRequest $request, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
+    {
+        return new AgGridQueryBuilder($request->validated(), $subject);
+    }
+
+    /**
      * Returns a new AgGridQueryBuilder for a selection.
      *
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
@@ -100,6 +113,40 @@ class AgGridQueryBuilder implements Responsable
         $this->resourceClass = $resourceClass;
 
         return $this;
+    }
+
+    public function toSetValues(array $allowedColumns = []): Collection
+    {
+        $column = Arr::get($this->params, 'column');
+        if ($column == null) {
+            throw new \Exception("To SetValues can only be called from AFFridSetValueRequest or when params contains 'column'");
+        }
+
+        if (collect($allowedColumns)->first() !== '*' && ! in_array($column, $allowedColumns)) {
+            throw new \Exception("Set value for column $column is not available or cannot be accessed");
+        }
+
+        $columnMetadata = ColumnMetadata::fromString($this->subject, $column);
+
+        if ($columnMetadata->hasRelations()) {
+
+            $dottedRelation = $columnMetadata->getDottedRelation();
+
+            return $this->subject->with($dottedRelation)
+                ->get()
+                ->map(fn (Model $model) => Arr::get($this->traverse($model, $dottedRelation)->toArray(), $columnMetadata->getColumn()))
+                ->unique()
+                ->values()
+                ->sort();
+        }
+
+        $column = $columnMetadata->isJsonColumn() ? $columnMetadata->getColumnAsJsonPath() : $columnMetadata->getColumn();
+
+        return $this->subject
+            ->select($column)
+            ->distinct()
+            ->orderBy($column)
+            ->pluck($column);
     }
 
     public function __call($name, $arguments)
@@ -341,5 +388,30 @@ class AgGridQueryBuilder implements Responsable
     protected function toJsonPath(string $key): string
     {
         return str_replace('.', '->', $key);
+    }
+
+    protected function traverse($model, $key, $default = null): Model
+    {
+        if (is_array($model)) {
+            return Arr::get($model, $key, $default);
+        }
+
+        if (is_null($key)) {
+            return $model;
+        }
+
+        if (isset($model[$key])) {
+            return $model[$key];
+        }
+
+        foreach (explode('.', $key) as $segment) {
+            try {
+                $model = $model->$segment;
+            } catch (\Exception $e) { // @phpstan-ignore-line
+                return value($default);
+            }
+        }
+
+        return $model;
     }
 }
