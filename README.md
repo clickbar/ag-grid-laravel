@@ -286,7 +286,7 @@ function onFilterChanged(event: FilterChangedEvent) {
 - Only works with PostgreSQL as a storage backend due to some special SQL operators being used in set and json queries.
 - Does not support multiple conditions per filter (AND, OR)
 - Does not support server-side grouping for AG Grid's pivot mode
-- Filtering for values in relations is only supported one level deep. E.g you can filter for `relation.value` but not `relation.otherRelation.value` 
+- ~~Filtering for values in relations is only supported one level deep. E.g you can filter for `relation.value` but not `relation.otherRelation.value`~~
 
 ## TODOs
 
