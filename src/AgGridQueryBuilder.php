@@ -10,6 +10,7 @@ use Clickbar\AgGrid\Enums\AgGridNumberFilterType;
 use Clickbar\AgGrid\Enums\AgGridRowModel;
 use Clickbar\AgGrid\Enums\AgGridTextFilterType;
 use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
+use Clickbar\AgGrid\Support\ColumnMetadata;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -17,7 +18,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
-use Illuminate\Support\Str;
 use Illuminate\Support\Traits\ForwardsCalls;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -201,14 +201,14 @@ class AgGridQueryBuilder implements Responsable
 
         foreach ($filters as $column => $filter) {
 
-            [$relation, $column] = $this->getRelation($column);
+            $columnInformation = ColumnMetadata::fromString($this->subject, $column);
 
-            if ($relation !== null) {
-                $this->subject->whereHas($relation, function (EloquentBuilder $builder) use ($column, $filter) {
-                    $this->addFilterToQuery($builder, $column, $filter);
+            if ($columnInformation->hasRelations()) {
+                $this->subject->whereHas($columnInformation->getDottedRelation(), function (EloquentBuilder $builder) use ($columnInformation, $filter) {
+                    $this->addFilterToQuery($builder, $columnInformation, $filter);
                 });
             } else {
-                $this->addFilterToQuery($this->subject, $column, $filter);
+                $this->addFilterToQuery($this->subject, $columnInformation, $filter);
             }
         }
     }
@@ -246,21 +246,21 @@ class AgGridQueryBuilder implements Responsable
         $this->subject->offset($startRow)->limit($endRow - $startRow);
     }
 
-    protected function addFilterToQuery(EloquentBuilder|Relation $subject, string $column, array $filter): void
+    protected function addFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
     {
         $filterType = AgGridFilterType::from($filter['filterType']);
         match ($filterType) {
-            AgGridFilterType::Set => $this->addSetFilterToQuery($subject, $column, $filter),
-            AgGridFilterType::Text => $this->addTextFilterToQuery($subject, $column, $filter),
-            AgGridFilterType::Number => $this->addNumberFilterToQuery($subject, $column, $filter),
-            AgGridFilterType::Date => $this->addDateFilterToQuery($subject, $column, $filter),
+            AgGridFilterType::Set => $this->addSetFilterToQuery($subject, $columnInformation, $filter),
+            AgGridFilterType::Text => $this->addTextFilterToQuery($subject, $columnInformation, $filter),
+            AgGridFilterType::Number => $this->addNumberFilterToQuery($subject, $columnInformation, $filter),
+            AgGridFilterType::Date => $this->addDateFilterToQuery($subject, $columnInformation, $filter),
         };
     }
 
-    protected function addSetFilterToQuery(EloquentBuilder|Relation $subject, string $column, array $filter): void
+    protected function addSetFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
     {
-        $isJsonColumn = $this->isJsonColumn($column);
-        $column = $this->toJsonPath($column);
+        $isJsonColumn = $columnInformation->isJsonColumn();
+        $column = $columnInformation->getColumnAsJsonPath();
         $values = $filter['values'];
         $all = $filter['all'] ?? false;
         $filteredValues = array_filter($values, fn ($value) => $value !== null);
@@ -284,9 +284,9 @@ class AgGridQueryBuilder implements Responsable
         });
     }
 
-    protected function addTextFilterToQuery(EloquentBuilder|Relation $subject, string $column, array $filter): void
+    protected function addTextFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
     {
-        $column = $this->toJsonPath($column);
+        $column = $columnInformation->getColumnAsJsonPath();
         $value = $filter['filter'] ?? null;
         $type = AgGridTextFilterType::from($filter['type']);
 
@@ -302,9 +302,9 @@ class AgGridQueryBuilder implements Responsable
         };
     }
 
-    protected function addNumberFilterToQuery(EloquentBuilder|Relation $subject, string $column, array $filter): void
+    protected function addNumberFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
     {
-        $column = $this->toJsonPath($column);
+        $column = $columnInformation->getColumnAsJsonPath();
         $value = $filter['filter'];
         $type = AgGridNumberFilterType::from($filter['type']);
 
@@ -321,9 +321,9 @@ class AgGridQueryBuilder implements Responsable
         };
     }
 
-    protected function addDateFilterToQuery(EloquentBuilder|Relation $subject, string $column, array $filter): void
+    protected function addDateFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
     {
-        $column = $this->toJsonPath($column);
+        $column = $columnInformation->getColumnAsJsonPath();
         $dateFrom = isset($filter['dateFrom']) ? new \DateTime($filter['dateFrom']) : null;
         $dateTo = isset($filter['dateTo']) ? new \DateTime($filter['dateTo']) : null;
 

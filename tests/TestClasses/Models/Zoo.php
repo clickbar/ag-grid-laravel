@@ -4,10 +4,9 @@ namespace Clickbar\AgGrid\Tests\TestClasses\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Keeper extends Model
+class Zoo extends Model
 {
     use HasFactory;
 
@@ -16,15 +15,11 @@ class Keeper extends Model
     protected $casts = [
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',
+        'address' => 'array',
     ];
 
-    public function flamingos(): HasMany
+    public function keepers(): HasMany
     {
-        return $this->hasMany(Flamingo::class);
-    }
-
-    public function zoo(): BelongsTo
-    {
-        return $this->belongsTo(Zoo::class);
+        return $this->hasMany(Keeper::class);
     }
 }
