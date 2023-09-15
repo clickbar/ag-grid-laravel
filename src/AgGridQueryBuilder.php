@@ -338,35 +338,6 @@ class AgGridQueryBuilder implements Responsable
         };
     }
 
-    protected function getRelation(string $column): array
-    {
-        $pos = strpos($column, '.');
-        if ($pos === false) {
-            return [null, $column];
-        }
-        // guess the name of the relation
-        $relationName = Str::camel(substr($column, 0, $pos));
-        if ($this->subject->getModel()->isRelation($relationName)) {
-            return [$relationName, substr($column, $pos + 1)];
-        }
-
-        return [null, $column];
-    }
-
-    protected function isJsonColumn(string $column): bool
-    {
-        return str_contains($column, '.') || $this->subject->getModel()->hasCast($column, [
-            'array',
-            'json',
-            'object',
-            'collection',
-            'encrypted:array',
-            'encrypted:collection',
-            'encrypted:json',
-            'encrypted:object',
-        ]);
-    }
-
     protected function toJsonPath(string $key): string
     {
         return str_replace('.', '->', $key);
