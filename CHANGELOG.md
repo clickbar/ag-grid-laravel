@@ -2,6 +2,12 @@
 
 All notable changes to `ag-grid-laravel` will be documented in this file.
 
+## Unreleased
+
+### Improved
+
+- Added support for nested relations in filters
+
 ## 0.2.0 (2023-08-24)
 
 - Rename `$params` to `$filters` in `AgGridCustomFilterable` 
