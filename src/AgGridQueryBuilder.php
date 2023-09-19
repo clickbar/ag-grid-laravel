@@ -248,6 +248,12 @@ class AgGridQueryBuilder implements Responsable
 
         $filters = collect($this->params['filterModel']);
 
+        // Check if we are in set values mode and exclude the filter for the given set value column
+        $column = Arr::get($this->params, 'column');
+        if ($column) {
+            $filters = $filters->filter(fn ($value, $key) => $key !== $column);
+        }
+
         foreach ($filters as $column => $filter) {
 
             $columnInformation = ColumnMetadata::fromString($this->subject, $column);
