@@ -9,6 +9,8 @@ use Clickbar\AgGrid\Enums\AgGridFilterType;
 use Clickbar\AgGrid\Enums\AgGridNumberFilterType;
 use Clickbar\AgGrid\Enums\AgGridRowModel;
 use Clickbar\AgGrid\Enums\AgGridTextFilterType;
+use Clickbar\AgGrid\Exceptions\InvalidSetValueOperation;
+use Clickbar\AgGrid\Exceptions\UnauthorizedSetFilterColumn;
 use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
 use Clickbar\AgGrid\Requests\AgGridSetValuesRequest;
 use Clickbar\AgGrid\Support\ColumnMetadata;
@@ -118,14 +120,12 @@ class AgGridQueryBuilder implements Responsable
     public function toSetValues(array $allowedColumns = []): Collection
     {
         $column = Arr::get($this->params, 'column');
-        if ($column == null) {
-            // TODO: Consider custom exception
-            throw new \Exception("To SetValues can only be called from AFFridSetValueRequest or when params contains 'column'");
+        if (empty($column)) {
+            throw InvalidSetValueOperation::make();
         }
 
         if (collect($allowedColumns)->first() !== '*' && ! in_array($column, $allowedColumns)) {
-            // TODO: Consider custom exception
-            throw new \Exception("Set value for column $column is not available or cannot be accessed");
+            throw UnauthorizedSetFilterColumn::make($column);
         }
 
         $columnMetadata = ColumnMetadata::fromString($this->subject, $column);
@@ -138,8 +138,8 @@ class AgGridQueryBuilder implements Responsable
                 ->get()
                 ->map(fn (Model $model) => Arr::get($this->traverse($model, $dottedRelation)->toArray(), $columnMetadata->getColumn()))
                 ->unique()
-                ->values()
-                ->sort();
+                ->sort()
+                ->values();
         }
 
         $column = $columnMetadata->isJsonColumn() ? $columnMetadata->getColumnAsJsonPath() : $columnMetadata->getColumn();
