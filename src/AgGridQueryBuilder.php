@@ -151,10 +151,10 @@ class AgGridQueryBuilder implements Responsable
             $resourceClass = $this->resourceClass;
             if (is_a($resourceClass, ResourceCollection::class, true)) {
                 // the resource is already a collection
-                $data = new $resourceClass($this->get());
+                $data = new $resourceClass($data);
             } else {
                 // wrap in an anonymous collection
-                $data = $resourceClass::collection($this->get());
+                $data = $resourceClass::collection($data);
             }
         }
 
@@ -356,15 +356,15 @@ class AgGridQueryBuilder implements Responsable
     protected function isJsonColumn(string $column): bool
     {
         return str_contains($column, '.') || $this->subject->getModel()->hasCast($column, [
-            'array',
-            'json',
-            'object',
-            'collection',
-            'encrypted:array',
-            'encrypted:collection',
-            'encrypted:json',
-            'encrypted:object',
-        ]);
+                'array',
+                'json',
+                'object',
+                'collection',
+                'encrypted:array',
+                'encrypted:collection',
+                'encrypted:json',
+                'encrypted:object',
+            ]);
     }
 
     protected function toJsonPath(string $key): string
