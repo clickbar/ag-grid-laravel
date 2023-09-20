@@ -356,15 +356,15 @@ class AgGridQueryBuilder implements Responsable
     protected function isJsonColumn(string $column): bool
     {
         return str_contains($column, '.') || $this->subject->getModel()->hasCast($column, [
-                'array',
-                'json',
-                'object',
-                'collection',
-                'encrypted:array',
-                'encrypted:collection',
-                'encrypted:json',
-                'encrypted:object',
-            ]);
+            'array',
+            'json',
+            'object',
+            'collection',
+            'encrypted:array',
+            'encrypted:collection',
+            'encrypted:json',
+            'encrypted:object',
+        ]);
     }
 
     protected function toJsonPath(string $key): string
