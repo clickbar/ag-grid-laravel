@@ -55,6 +55,58 @@ class FlamingoGridController extends Controller
 }
 ```
 
+### Set Filter Values
+When using AG Grid with the `serverSide` row model, you are responsible for providing the values for the set value filter (the frontend only knows a subset of the whole data and therefore cannot know all possible set values).
+
+```php
+class FlamingoGridSetValuesController extends Controller
+{
+    public function __invoke(AgGridSetValuesRequest $request)
+    {
+        $query = Flamingo::query()
+            ->with(['keeper']);
+    
+        return AgGridQueryBuilder::forSetValuesRequest($request, $query)
+            ->toSetValues(['*']);
+    }
+}
+```
+See the `AgGridSetValuesRequest` class for the structure of the request.
+
+**IMPORTANT**  
+You need to whitelist the columns the set filter values can be retrieved for. This can be done be providing an array with the columns/dotted relation:
+
+```php
+->toSetValues(['name', 'kepper.name']);
+```
+
+If your model does not expose any relations or sensitive columns, you can also use `['*']` as wildcard.
+
+Here's an example for the frontend implementation:
+
+```typescript
+const colDef = {
+    filterParams: {
+        excelMode: 'windows',
+        values: (parameters: SetFilterValuesFuncParams) => {
+            axios
+                .post('url',
+                    {
+                        column,
+                        filterModel: parameters.api.getFilterModel(),
+                    },
+                )
+                .then((response) => {
+                    parameters.success(response.data)
+                }).catch(() => {
+                parameters.success([])
+            })
+        },
+    },
+}
+```
+
+
 ### Server-side select
 
 When using AG Grid with the `serverSide` row model, you can't just pass the selected IDs to the server when performing a batch operation.
