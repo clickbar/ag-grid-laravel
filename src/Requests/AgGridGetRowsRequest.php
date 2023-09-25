@@ -21,6 +21,9 @@ class AgGridGetRowsRequest extends FormRequest
             'selectAll' => ['sometimes', 'boolean'],
             'toggledNodes' => ['sometimes', 'array'],
             'customFilters' => ['sometimes', 'array'],
+            // Row Grouping
+            'rowGroupCols' => ['sometimes', 'array'],
+            'groupKeys' => ['sometimes', 'array'],
         ];
     }
 }

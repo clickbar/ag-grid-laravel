@@ -14,6 +14,7 @@ use Clickbar\AgGrid\Exceptions\UnauthorizedSetFilterColumn;
 use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
 use Clickbar\AgGrid\Requests\AgGridSetValuesRequest;
 use Clickbar\AgGrid\Support\ColumnMetadata;
+use Clickbar\AgGrid\Support\RowGroupMetadata;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Traits\ForwardsCalls;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -40,8 +42,10 @@ class AgGridQueryBuilder implements Responsable
     /** @var class-string<JsonResource> | null */
     protected ?string $resourceClass = null;
 
+    protected RowGroupMetadata $rowGroupMetadata;
+
     /**
-     * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
+     * @param EloquentBuilder|Relation|Model|class-string<Model> $subject
      */
     public function __construct(array $params, EloquentBuilder|Relation|Model|string $subject)
     {
@@ -57,16 +61,19 @@ class AgGridQueryBuilder implements Responsable
             $model->applyAgGridCustomFilters($this->subject, $this->params['customFilters'] ?? []);
         }
 
+        $this->rowGroupMetadata = RowGroupMetadata::fromParams($params);
+
         $this->addFiltersToQuery();
         $this->addToggledFilterToQuery();
         $this->addSortsToQuery();
         $this->addLimitAndOffsetToQuery();
+        $this->addRowGrouping();
     }
 
     /**
      * Returns a new AgGridQueryBuilder for an AgGridGetRowsRequest.
      *
-     * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
+     * @param EloquentBuilder|Relation|Model|class-string<Model> $subject
      */
     public static function forRequest(AgGridGetRowsRequest $request, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
     {
@@ -76,7 +83,7 @@ class AgGridQueryBuilder implements Responsable
     /**
      * Returns a new AgGridQueryBuilder for an AgGridGetRowsRequest.
      *
-     * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
+     * @param EloquentBuilder|Relation|Model|class-string<Model> $subject
      */
     public static function forSetValuesRequest(AgGridSetValuesRequest $request, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
     {
@@ -86,7 +93,7 @@ class AgGridQueryBuilder implements Responsable
     /**
      * Returns a new AgGridQueryBuilder for a selection.
      *
-     * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
+     * @param EloquentBuilder|Relation|Model|class-string<Model> $subject
      */
     public static function forSelection(array $selection, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
     {
@@ -108,7 +115,7 @@ class AgGridQueryBuilder implements Responsable
     }
 
     /**
-     * @param  class-string<JsonResource>  $resourceClass
+     * @param class-string<JsonResource> $resourceClass
      */
     public function resource(string $resourceClass): self
     {
@@ -124,7 +131,7 @@ class AgGridQueryBuilder implements Responsable
             throw InvalidSetValueOperation::make();
         }
 
-        if (collect($allowedColumns)->first() !== '*' && ! in_array($column, $allowedColumns)) {
+        if (collect($allowedColumns)->first() !== '*' && !in_array($column, $allowedColumns)) {
             throw UnauthorizedSetFilterColumn::make($column);
         }
 
@@ -136,7 +143,7 @@ class AgGridQueryBuilder implements Responsable
 
             return $this->subject->with($dottedRelation)
                 ->get()
-                ->map(fn (Model $model) => Arr::get($this->traverse($model, $dottedRelation)->toArray(), $columnMetadata->getColumn()))
+                ->map(fn(Model $model) => Arr::get($this->traverse($model, $dottedRelation)->toArray(), $columnMetadata->getColumn()))
                 ->unique()
                 ->sort()
                 ->values();
@@ -179,7 +186,7 @@ class AgGridQueryBuilder implements Responsable
 
             return Excel::download(
                 new AgGridExport($this->subject, $this->params['exportColumns'] ?? null),
-                'export.'.strtolower($writerType),
+                'export.' . strtolower($writerType),
                 $writerType
             );
         }
@@ -190,7 +197,15 @@ class AgGridQueryBuilder implements Responsable
             $query->limit = $query->offset = $query->orders = null;
             $query->cleanBindings(['order']);
         });
-        $total = $clone->count();
+
+        if ($this->isGrouped()) {
+            // TODO: Check for better way
+            $total = DB::query()
+                ->fromSub($clone, 'rows')
+                ->count();
+        } else {
+            $total = $clone->count();
+        }
 
         $data = $this->get();
 
@@ -215,7 +230,7 @@ class AgGridQueryBuilder implements Responsable
 
     protected function addToggledFilterToQuery(): void
     {
-        if (! isset($this->params['rowModel'])) {
+        if (!isset($this->params['rowModel'])) {
             return;
         }
         match (AgGridRowModel::from($this->params['rowModel'])) {
@@ -240,9 +255,14 @@ class AgGridQueryBuilder implements Responsable
         }
     }
 
+    protected function addRowGrouping(): void
+    {
+        $this->rowGroupMetadata->appendQueryBuilderMethods($this->subject);
+    }
+
     protected function addFiltersToQuery(): void
     {
-        if (! isset($this->params['filterModel'])) {
+        if (!isset($this->params['filterModel'])) {
             return;
         }
 
@@ -251,7 +271,7 @@ class AgGridQueryBuilder implements Responsable
         // Check if we are in set values mode and exclude the filter for the given set value column
         $column = Arr::get($this->params, 'column');
         if ($column) {
-            $filters = $filters->filter(fn ($value, $key) => $key !== $column);
+            $filters = $filters->filter(fn($value, $key) => $key !== $column);
         }
 
         foreach ($filters as $column => $filter) {
@@ -270,7 +290,7 @@ class AgGridQueryBuilder implements Responsable
 
     protected function addSortsToQuery(): void
     {
-        if (! isset($this->params['sortModel'])) {
+        if (!isset($this->params['sortModel'])) {
             return;
         }
 
@@ -282,11 +302,23 @@ class AgGridQueryBuilder implements Responsable
         }
 
         foreach ($sorts as $sort) {
-            $this->subject->orderBy($this->toJsonPath($sort['colId']), $sort['sort']);
+
+            // Check if the sort field is included in the current grouping
+            if ($this->rowGroupMetadata->isColumnAvailable($sort['colId'])) {
+                $this->subject->orderBy($this->toJsonPath($sort['colId']), $sort['sort']);
+            }
         }
 
-        // we need an additional sort condition so that the order is stable in all cases
-        $this->subject->orderBy($this->subject->getModel()->getKeyName());
+        if ($this->rowGroupMetadata->isGrouped()) {
+            // TODO: Check for current grouping level
+
+            // TODO: Add more context for better accessibility of groups
+            $this->subject->orderBy($this->rowGroupMetadata->getCurrentRowGroupCol()['field']);
+        } else {
+            // we need an additional sort condition so that the order is stable in all cases
+            $this->subject->orderBy($this->subject->getModel()->getKeyName());
+        }
+
     }
 
     protected function addLimitAndOffsetToQuery(): void
@@ -318,7 +350,7 @@ class AgGridQueryBuilder implements Responsable
         $column = $columnInformation->getColumnAsJsonPath();
         $values = $filter['values'];
         $all = $filter['all'] ?? false;
-        $filteredValues = array_filter($values, fn ($value) => $value !== null);
+        $filteredValues = array_filter($values, fn($value) => $value !== null);
 
         $subject->where(function (EloquentBuilder $query) use ($all, $column, $values, $filteredValues, $isJsonColumn) {
             if (count($filteredValues) !== count($values)) {
@@ -331,7 +363,7 @@ class AgGridQueryBuilder implements Responsable
                 // TODO: find a workaround!
                 $query->orWhere(
                     $column,
-                    $all ? '?&' : '?|', '{'.implode(',', $filteredValues).'}',
+                    $all ? '?&' : '?|', '{' . implode(',', $filteredValues) . '}',
                 );
             } else {
                 $query->orWhereIn($column, $filteredValues);
@@ -348,10 +380,10 @@ class AgGridQueryBuilder implements Responsable
         match ($type) {
             AgGridTextFilterType::Equals => $subject->where($column, '=', $value),
             AgGridTextFilterType::NotEqual => $subject->where($column, '!=', $value),
-            AgGridTextFilterType::Contains => $subject->where($column, 'ilike', '%'.$value.'%'),
-            AgGridTextFilterType::NotContains => $subject->where($column, 'not ilike', '%'.$value.'%'),
-            AgGridTextFilterType::StartsWith => $subject->where($column, 'ilike', $value.'%'),
-            AgGridTextFilterType::EndsWith => $subject->where($column, 'ilike', '%'.$value),
+            AgGridTextFilterType::Contains => $subject->where($column, 'ilike', '%' . $value . '%'),
+            AgGridTextFilterType::NotContains => $subject->where($column, 'not ilike', '%' . $value . '%'),
+            AgGridTextFilterType::StartsWith => $subject->where($column, 'ilike', $value . '%'),
+            AgGridTextFilterType::EndsWith => $subject->where($column, 'ilike', '%' . $value),
             AgGridTextFilterType::Blank => $subject->whereNull($column),
             AgGridTextFilterType::NotBlank => $subject->whereNotNull($column),
         };
@@ -421,5 +453,22 @@ class AgGridQueryBuilder implements Responsable
         }
 
         return $model;
+    }
+
+    protected function isGrouped(): bool
+    {
+        if (!isset($this->params['rowGroupCols']) || empty($this->params['rowGroupCols'])) {
+            return false;
+        }
+
+        // --> rowGroupCols available and not empty
+
+        if (!isset($this->params['groupKeys']) || empty($this->params['groupKeys'])) {
+            return true;
+        }
+
+        // --> groupKeys available and not empty
+
+        return count($this->params['rowGroupCols']) !== count($this->params['groupKeys']);
     }
 }
