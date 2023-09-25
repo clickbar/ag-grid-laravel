@@ -6,14 +6,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 class RowGroupMetadata
 {
-
     public function __construct(
         protected ?array $rowGroupCols,
         protected ?array $groupKeys,
-    )
-    {
+    ) {
     }
-
 
     public static function fromParams(array $params): self
     {
@@ -24,7 +21,6 @@ class RowGroupMetadata
         );
 
     }
-
 
     public function appendQueryBuilderMethods(Builder &$builder): Builder
     {
@@ -37,7 +33,7 @@ class RowGroupMetadata
 
         // Add the group by column
         $currentRowGroupCol = $this->getCurrentRowGroupCol();
-        if ($currentRowGroupCol){
+        if ($currentRowGroupCol) {
             $builder->cleanBindings(['select']);
             $builder->select($currentRowGroupCol['field']);
             $builder->groupBy($currentRowGroupCol['field']);
@@ -47,18 +43,20 @@ class RowGroupMetadata
 
     }
 
-    public function getCurrentRowGroupCol(): ?array {
+    public function getCurrentRowGroupCol(): ?array
+    {
 
-        if (!$this->isGrouped()){
+        if (! $this->isGrouped()) {
             return null;
         }
 
         return $this->rowGroupCols[count($this->groupKeys)];
     }
 
-    public function isColumnAvailable(string $column): bool {
+    public function isColumnAvailable(string $column): bool
+    {
 
-        if (!$this->isGrouped()){
+        if (! $this->isGrouped()) {
             return true;
         }
 
@@ -82,5 +80,4 @@ class RowGroupMetadata
         // Check if the all rowGroupCols are equipped with a key => no grouping anymore
         return count($this->rowGroupCols) !== count($this->groupKeys);
     }
-
 }
