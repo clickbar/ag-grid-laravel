@@ -151,10 +151,10 @@ class AgGridQueryBuilder implements Responsable
             $resourceClass = $this->resourceClass;
             if (is_a($resourceClass, ResourceCollection::class, true)) {
                 // the resource is already a collection
-                $data = new $resourceClass($this->get());
+                $data = new $resourceClass($data);
             } else {
                 // wrap in an anonymous collection
-                $data = $resourceClass::collection($this->get());
+                $data = $resourceClass::collection($data);
             }
         }
 
