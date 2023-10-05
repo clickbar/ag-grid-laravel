@@ -143,12 +143,14 @@ class AgGridQueryBuilder implements Responsable
         }
 
         $column = $columnMetadata->isJsonColumn() ? $columnMetadata->getColumnAsJsonPath() : $columnMetadata->getColumn();
+        // When getting from json, postgres uses ?column? as columns name instead the 'A->B'
+        $pluckColumn = $columnMetadata->isJsonColumn() ? '?column?' : $columnMetadata->getColumn();
 
         return $this->subject
             ->select($column)
             ->distinct()
             ->orderBy($column)
-            ->pluck($column);
+            ->pluck($pluckColumn);
     }
 
     public function __call($name, $arguments)
