@@ -129,7 +129,7 @@ class AgGridQueryBuilder implements Responsable
             };
 
             return Excel::download(
-                new AgGridExport($this->subject, $this->params['exportColumns'] ?? null),
+                new AgGridExport($this->subject, $this->params['exportCols'] ?? null),
                 'export.'.strtolower($writerType),
                 $writerType
             );
