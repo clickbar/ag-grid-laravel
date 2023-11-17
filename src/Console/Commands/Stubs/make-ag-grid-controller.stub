@@ -1,0 +1,34 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ rootNamespace }}Http\Controllers\Controller;
+use Clickbar\AgGrid\AgGridQueryBuilder;
+use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
+use Clickbar\AgGrid\Requests\AgGridSetValuesRequest;
+
+class {{ class }} extends Controller
+{
+
+    /**
+     * Handle the row request.
+     */
+    public function rows(AgGridGetRowsRequest $request): AgGridQueryBuilder
+    {
+        $query = Model::query();
+
+        return AgGridQueryBuilder::forRequest($request, $query);
+    }
+
+    /**
+     * Handle the set values request.
+     */
+    public function setValues(AgGridSetValuesRequest $request)
+    {
+        $query = Model::query();
+
+        return AgGridQueryBuilder::forSetValuesRequest($request, $query)
+            ->toSetValues(['*']);
+    }
+
+}
