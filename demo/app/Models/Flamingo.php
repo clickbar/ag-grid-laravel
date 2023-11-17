@@ -9,13 +9,13 @@ use Clickbar\AgGrid\Formatters\AgGridArrayFormatter;
 use Clickbar\AgGrid\Formatters\AgGridBooleanFormatter;
 use Clickbar\AgGrid\Formatters\AgGridDateFormatter;
 use Clickbar\AgGrid\Formatters\AgGridDateTimeFormatter;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Flamingo extends Model implements AgGridExportable, AgGridCustomFilterable
+class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
 {
     use HasFactory;
     use SoftDeletes;

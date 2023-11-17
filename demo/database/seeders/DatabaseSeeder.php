@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
         $keepers = Keeper::factory()->count(10)->create();
         Flamingo::factory()
             ->count(1000)
-            ->sequence(...$keepers->map(fn(Keeper $keeper) => ['keeper_id' => $keeper->id])->all())
+            ->sequence(...$keepers->map(fn (Keeper $keeper) => ['keeper_id' => $keeper->id])->all())
             ->create();
     }
 }
