@@ -1,0 +1,39 @@
+{
+  "root": true,
+  "extends": ["@clickbar"],
+  // Enable once prevent abbreviations is enabled again
+  "reportUnusedDisableDirectives": false,
+  "rules": {
+    "vue/no-mutating-props": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "unicorn/prefer-query-selector": "off",
+    "vue/html-self-closing": "warn",
+    "vue/multi-word-component-names": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "vue/component-tags-order": "off",
+    "vue/padding-line-between-tags": "off",
+    // Enable steps below step by step haha
+    "vue/prefer-true-attribute-shorthand": "off",
+    "@typescript-eslint/no-dynamic-delete": "off",
+    "@typescript-eslint/no-floating-promises": "off",
+    "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/no-unnecessary-condition": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-enum-comparison": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
+    "import/order": "off",
+    "no-console": "off",
+    "unicorn/prevent-abbreviations": "off",
+    "unused-imports/no-unused-vars": "off",
+    "vue/define-props-declaration": "off",
+    "vue/no-ref-object-destructure": "off",
+    "vue/no-required-prop-with-default": "off",
+    "vue/no-root-v-if": "off",
+    "vue/require-typed-ref": "off"
+  },
+  "ignorePatterns": ["resources/js/Utils/Expression", "docs"]
+}
