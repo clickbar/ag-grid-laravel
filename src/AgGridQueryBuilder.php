@@ -3,6 +3,7 @@
 namespace Clickbar\AgGrid;
 
 use Clickbar\AgGrid\Contracts\AgGridCustomFilterable;
+use Clickbar\AgGrid\Contracts\AgGridSetValueProvider;
 use Clickbar\AgGrid\Enums\AgGridDateFilterType;
 use Clickbar\AgGrid\Enums\AgGridExportFormat;
 use Clickbar\AgGrid\Enums\AgGridFilterType;
@@ -126,6 +127,13 @@ class AgGridQueryBuilder implements Responsable
 
         if (collect($allowedColumns)->first() !== '*' && ! in_array($column, $allowedColumns)) {
             throw UnauthorizedSetFilterColumn::make($column);
+        }
+
+        if ($this->getModel() instanceof AgGridSetValueProvider) {
+            $providedSetValues = $this->getModel()->provideAgGridSetValues($column);
+            if ($providedSetValues) {
+                return Collection::make($providedSetValues);
+            }
         }
 
         $columnMetadata = ColumnMetadata::fromString($this->subject, $column);
