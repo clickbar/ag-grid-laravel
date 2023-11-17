@@ -11,7 +11,7 @@ class FlamingoFactory extends Factory
         return [
             'name' => $this->faker->firstName(),
             'weight' => $this->faker->randomFloat(),
-            'preferred_food_types' => $this->faker->randomElements(['shrimp', 'algae', 'fish', 'insects', 'pellets', 'vegetables']),
+            'preferred_food_types' => $this->faker->randomElements(['shrimp', 'algae', 'fish', 'insects', 'pellets', 'vegetables'], 3),
             'custom_properties' => null,
             'is_hungry' => $this->faker->boolean(),
             'last_vaccinated_on' => $this->faker->date(),

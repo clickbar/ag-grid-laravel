@@ -142,15 +142,23 @@ class AgGridQueryBuilder implements Responsable
                 ->values();
         }
 
-        $column = $columnMetadata->isJsonColumn() ? $columnMetadata->getColumnAsJsonPath() : $columnMetadata->getColumn();
-        // When getting from json, postgres uses ?column? as columns name instead the 'A->B'
-        $pluckColumn = $columnMetadata->isJsonColumn() ? '?column?' : $columnMetadata->getColumn();
+        $column = $columnMetadata->isNestedJsonColumn() ? $columnMetadata->getColumnAsJsonPath() : $columnMetadata->getColumn();
 
-        return $this->subject
+        // When getting from json, postgres uses ?column? as columns name instead the 'A->B'
+        $pluckColumn = $columnMetadata->isNestedJsonColumn() ? '?column?' : $columnMetadata->getColumn();
+
+        $values = $this->subject
             ->select($column)
             ->distinct()
             ->orderBy($column)
             ->pluck($pluckColumn);
+
+        if ($columnMetadata->isJsonColumn() && ! $columnMetadata->isNestedJsonColumn()) {
+            // --> We need to flat the data, because we habe a flat json array
+            return $values->flatten(1)->unique()->sort()->values();
+        }
+
+        return $values;
     }
 
     public function __call($name, $arguments)
@@ -322,7 +330,7 @@ class AgGridQueryBuilder implements Responsable
         $all = $filter['all'] ?? false;
         $filteredValues = array_filter($values, fn ($value) => $value !== null);
 
-        $subject->where(function (EloquentBuilder $query) use ($all, $column, $values, $filteredValues, $isJsonColumn) {
+        $subject->where(function (EloquentBuilder $query) use ($columnInformation, $all, $column, $values, $filteredValues, $isJsonColumn) {
             if (count($filteredValues) !== count($values)) {
                 // there was a null in there
                 $query->whereNull($column);
@@ -332,7 +340,7 @@ class AgGridQueryBuilder implements Responsable
                 // TODO: this does not work at the moment because laravel has no support for the ?& and ?| operators
                 // TODO: find a workaround!
                 $query->orWhere(
-                    $column,
+                    $columnInformation->getColumnAsJsonAccessor(),
                     $all ? '?&' : '?|', '{'.implode(',', $filteredValues).'}',
                 );
             } else {

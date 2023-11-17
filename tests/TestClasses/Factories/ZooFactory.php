@@ -15,6 +15,10 @@ class ZooFactory extends Factory
                 'house_number' => $this->faker->buildingNumber(),
                 'postcode' => $this->faker->postcode(),
                 'city' => $this->faker->city(),
+                'contact' => [
+                    'phone' => $this->faker->phoneNumber(),
+                    'email' => $this->faker->email(),
+                ],
             ],
         ];
     }
