@@ -8,92 +8,92 @@ use Illuminate\Database\Eloquent\Model;
 
 class AgGridViewModel extends Model
 {
-    public static function create(array $attributes = [])
+    final public static function create(array $attributes = [])
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public static function forceCreate(array $attributes)
+    final public static function forceCreate(array $attributes)
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function save(array $options = [])
+    final public function save(array $options = [])
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function update(array $attributes = [], array $options = [])
+    final public function update(array $attributes = [], array $options = [])
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public static function firstOrCreate(array $attributes, array $values = [])
+    final public static function firstOrCreate(array $attributes, array $values = [])
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public static function firstOrNew(array $attributes, array $values = [])
+    final public static function firstOrNew(array $attributes, array $values = [])
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public static function updateOrCreate(array $attributes, array $values = [])
+    final public static function updateOrCreate(array $attributes, array $values = [])
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function delete()
+    final public function delete()
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public static function destroy($ids)
+    final public static function destroy($ids)
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function restore()
+    final public function restore()
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function forceDelete()
+    final public function forceDelete()
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function performDeleteOnModel()
+    final public function performDeleteOnModel()
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function push()
+    final public function push()
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function finishSave(array $options)
+    final public function finishSave(array $options)
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function performUpdate(Builder $query, array $options = []): bool
+    final public function performUpdate(Builder $query, array $options = []): bool
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function touch($attribute = null)
+    final public function touch($attribute = null)
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function insert()
+    final public function insert()
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
 
-    public function truncate()
+    final public function truncate()
     {
         throw new ViewManipulationNotAllowedException(__FUNCTION__, get_called_class());
     }
