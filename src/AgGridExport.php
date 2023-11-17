@@ -15,7 +15,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
-class AgGridExport implements FromQuery, WithHeadings, WithColumnFormatting, ShouldAutoSize, WithMapping
+class AgGridExport implements FromQuery, ShouldAutoSize, WithColumnFormatting, WithHeadings, WithMapping
 {
     /**
      * @var Collection<string, AgGridColumnDefinition>

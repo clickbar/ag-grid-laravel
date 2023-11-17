@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Flamingo extends Model implements AgGridExportable, AgGridCustomFilterable
+class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
 {
     use HasFactory;
     use SoftDeletes;
