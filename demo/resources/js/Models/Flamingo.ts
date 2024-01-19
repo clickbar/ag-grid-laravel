@@ -171,7 +171,18 @@ export const flamingoViewColumnDefinition = [
                 )
             },
             {
-                headerValueGetter: () => 'Gewicht',
+                headerValueGetter: () => 'Species',
+                field: 'flamingo_species',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'flamingo_species',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+            {
+                headerValueGetter: () => 'Weight',
                 field: 'flamingo_weight',
                 filter: 'agNumberColumnFilter',
                 sortable: true,
@@ -245,7 +256,7 @@ export const flamingoViewColumnDefinition = [
                 )
             },
             {
-                headerValueGetter: () => 'Straße',
+                headerValueGetter: () => 'Street',
                 field: 'zoo_address.street',
                 sortable: true,
                 filter: true,
@@ -256,7 +267,7 @@ export const flamingoViewColumnDefinition = [
                 )
             },
             {
-                headerValueGetter: () => 'Stadt',
+                headerValueGetter: () => 'City',
                 field: 'zoo_address.city',
                 sortable: true,
                 filter: true,
@@ -267,7 +278,7 @@ export const flamingoViewColumnDefinition = [
                 )
             },
             {
-                headerValueGetter: () => 'E-Mail',
+                headerValueGetter: () => 'Mail',
                 field: 'zoo_address.contact.email',
                 sortable: true,
                 filter: true,
@@ -278,7 +289,7 @@ export const flamingoViewColumnDefinition = [
                 )
             },
             {
-                headerValueGetter: () => 'Telefon',
+                headerValueGetter: () => 'Phone',
                 field: 'zoo_address.contact.phone',
                 sortable: true,
                 filter: true,
