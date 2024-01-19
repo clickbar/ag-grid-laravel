@@ -12,51 +12,52 @@ use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionMethod;
 
-class ColumnMetadata
+class Column
 {
     public function __construct(
         protected Model $baseModel,
         /** @var RelationMetadata[] */
         protected array $relations,
-        protected string $column,
+        protected string $colId,
+        protected string $name,
     ) {
     }
 
-    public static function fromString(EloquentBuilder|Relation $subject, string $column): self
+    public static function fromColId(EloquentBuilder|Relation $subject, string $colId): self
     {
 
-        $parts = Str::of($column)->explode('.');
+        $parts = Str::of($colId)->explode('.');
 
         if ($parts->count() === 1) {
             // --> No nested information
-            return new self($subject->getModel(), [], $column);
+            return new self($subject->getModel(), [], $colId, $colId);
         }
 
         $relations = [];
-        $model = $subject->getModel();
+        $name = $colId;
+        $currentModel = $subject->getModel();
 
         foreach ($parts as $index => $part) {
-
             $relationName = Str::camel($part);
-            $modelRelations = self::getRelations($model::class);
+            $modelRelations = self::getRelations($currentModel::class);
 
             if ($modelRelations->contains($relationName)) {
-                $relation = $model->$relationName();
-                $model = $relation->getModel();
+                $relation = $currentModel->$relationName();
+                $currentModel = $relation->getModel();
 
-                $relations[] = new RelationMetadata($relationName, $model);
+                $relations[] = new RelationMetadata($relationName, $currentModel);
             } else {
                 // --> End of relation (further dots must be json nesting)
                 $remaining = $parts->skip($index + 1)->implode('.');
                 if (! empty($remaining)) {
                     $remaining = '.'.$remaining;
                 }
-                $column = $part.$remaining;
+                $name = $part.$remaining;
                 break;
             }
         }
 
-        return new self($subject->getModel(), $relations, $column);
+        return new self($subject->getModel(), $relations, $colId, $name);
 
     }
 
@@ -82,17 +83,31 @@ class ColumnMetadata
             ->implode('name', '.');
     }
 
-    public function getColumn(): string
+    /**
+     * Returns the full colId, including all parent relations.
+     */
+    public function getColId(): string
     {
-        return $this->column;
+        return $this->colId;
     }
 
+    /**
+     * Returns the column name of the innermost relation, including possible json accessors.
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * Returns true if the column refers to a json column.
+     */
     public function isJsonColumn(): bool
     {
         $model = collect($this->relations)->last()?->model ?? $this->baseModel;
-        $colum = Str::before($this->column, '.');
+        $colum = Str::before($this->name, '.');
 
-        return str_contains($this->column, '.') || $model->hasCast($colum, [
+        return str_contains($this->name, '.') || $model->hasCast($colum, [
             'array',
             'json',
             'object',
@@ -104,25 +119,34 @@ class ColumnMetadata
         ]);
     }
 
+    /**
+     * Returns true if the column refers to a field within a json column.
+     */
     public function isNestedJsonColumn(): bool
     {
-        return $this->isJsonColumn() && Str::contains($this->column, '.');
+        return $this->isJsonColumn() && Str::contains($this->name, '.');
     }
 
-    public function getColumnAsJsonPath(): string
+    /**
+     * Returns the name of the column with any json path segments (.) replaced by an arrow (->)
+     */
+    public function getNameAsJsonPath(): string
     {
-        return str_replace('.', '->', $this->column);
+        return str_replace('.', '->', $this->name);
     }
 
-    public function getColumnAsJsonAccessor(): Expression|string
+    /**
+     * Returns the name of the column with any json path segments replaces by a call to jsonb_extract_path
+     */
+    public function getNameAsJsonAccessor(): Expression|string
     {
-        if (! Str::contains($this->column, '.')) {
+        if (! Str::contains($this->name, '.')) {
             // --> No nested json
-            return $this->column;
+            return $this->name;
         }
 
-        $column = Str::before($this->column, '.');
-        $pathValues = Str::of($this->column)
+        $column = Str::before($this->name, '.');
+        $pathValues = Str::of($this->name)
             ->after('.')
             ->explode('.')
             ->implode(fn (string $part) => "'$part'", ', ');

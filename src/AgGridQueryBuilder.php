@@ -13,7 +13,7 @@ use Clickbar\AgGrid\Exceptions\InvalidSetValueOperation;
 use Clickbar\AgGrid\Exceptions\UnauthorizedSetFilterColumn;
 use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
 use Clickbar\AgGrid\Requests\AgGridSetValuesRequest;
-use Clickbar\AgGrid\Support\ColumnMetadata;
+use Clickbar\AgGrid\Support\Column;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -119,42 +119,42 @@ class AgGridQueryBuilder implements Responsable
 
     public function toSetValues(array $allowedColumns = []): Collection
     {
-        $column = Arr::get($this->params, 'column');
-        if (empty($column)) {
+        $colId = Arr::get($this->params, 'column');
+        if (empty($colId)) {
             throw InvalidSetValueOperation::make();
         }
 
-        if (collect($allowedColumns)->first() !== '*' && ! in_array($column, $allowedColumns)) {
-            throw UnauthorizedSetFilterColumn::make($column);
+        if (collect($allowedColumns)->first() !== '*' && ! in_array($colId, $allowedColumns)) {
+            throw UnauthorizedSetFilterColumn::make($colId);
         }
 
-        $columnMetadata = ColumnMetadata::fromString($this->subject, $column);
+        $column = Column::fromColId($this->subject, $colId);
 
-        if ($columnMetadata->hasRelations()) {
+        if ($column->hasRelations()) {
 
-            $dottedRelation = $columnMetadata->getDottedRelation();
+            $dottedRelation = $column->getDottedRelation();
 
             return $this->subject->with($dottedRelation)
                 ->get()
-                ->map(fn (Model $model) => Arr::get($this->traverse($model, $dottedRelation)->toArray(), $columnMetadata->getColumn()))
+                ->map(fn (Model $model) => Arr::get($this->traverse($model, $dottedRelation)->toArray(), $column->getName()))
                 ->unique()
                 ->sort()
                 ->values();
         }
 
-        $column = $columnMetadata->isNestedJsonColumn() ? $columnMetadata->getColumnAsJsonPath() : $columnMetadata->getColumn();
+        $columnName = $column->isNestedJsonColumn() ? $column->getNameAsJsonPath() : $column->getName();
 
         // When getting from json, postgres uses ?column? as columns name instead the 'A->B'
-        $pluckColumn = $columnMetadata->isNestedJsonColumn() ? '?column?' : $columnMetadata->getColumn();
+        $pluckColumn = $column->isNestedJsonColumn() ? '?column?' : $column->getName();
 
         $values = $this->subject
-            ->select($column)
+            ->select($columnName)
             ->distinct()
-            ->orderBy($column)
+            ->orderBy($columnName)
             ->pluck($pluckColumn);
 
-        if ($columnMetadata->isJsonColumn() && ! $columnMetadata->isNestedJsonColumn()) {
-            // --> We need to flat the data, because we habe a flat json array
+        if ($column->isJsonColumn() && ! $column->isNestedJsonColumn()) {
+            // --> We need to flat the data, because we have a flat json array
             return $values->flatten(1)->unique()->sort()->values();
         }
 
@@ -259,21 +259,21 @@ class AgGridQueryBuilder implements Responsable
         $filters = collect($this->params['filterModel']);
 
         // Check if we are in set values mode and exclude the filter for the given set value column
-        $column = Arr::get($this->params, 'column');
-        if ($column) {
-            $filters = $filters->filter(fn ($value, $key) => $key !== $column);
+        $colId = Arr::get($this->params, 'column');
+        if ($colId) {
+            $filters = $filters->filter(fn ($value, $key) => $key !== $colId);
         }
 
-        foreach ($filters as $column => $filter) {
+        foreach ($filters as $colId => $filter) {
 
-            $columnInformation = ColumnMetadata::fromString($this->subject, $column);
+            $column = Column::fromColId($this->subject, $colId);
 
-            if ($columnInformation->hasRelations()) {
-                $this->subject->whereHas($columnInformation->getDottedRelation(), function (EloquentBuilder $builder) use ($columnInformation, $filter) {
-                    $this->addFilterToQuery($builder, $columnInformation, $filter);
+            if ($column->hasRelations()) {
+                $this->subject->whereHas($column->getDottedRelation(), function (EloquentBuilder $builder) use ($column, $filter) {
+                    $this->addFilterToQuery($builder, $column, $filter);
                 });
             } else {
-                $this->addFilterToQuery($this->subject, $columnInformation, $filter);
+                $this->addFilterToQuery($this->subject, $column, $filter);
             }
         }
     }
@@ -292,8 +292,8 @@ class AgGridQueryBuilder implements Responsable
         }
 
         foreach ($sorts as $sort) {
-            $columnInformation = ColumnMetadata::fromString($this->subject, $sort['colId']);
-            $this->subject->orderBy($columnInformation->getColumnAsJsonPath(), $sort['sort']);
+            $columnInformation = Column::fromColId($this->subject, $sort['colId']);
+            $this->subject->orderBy($columnInformation->getNameAsJsonPath(), $sort['sort']);
         }
 
         // we need an additional sort condition so that the order is stable in all cases
@@ -312,95 +312,95 @@ class AgGridQueryBuilder implements Responsable
         $this->subject->offset($startRow)->limit($endRow - $startRow);
     }
 
-    protected function addFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
+    protected function addFilterToQuery(EloquentBuilder|Relation $subject, Column $column, array $filter): void
     {
         $filterType = AgGridFilterType::from($filter['filterType']);
         match ($filterType) {
-            AgGridFilterType::Set => $this->addSetFilterToQuery($subject, $columnInformation, $filter),
-            AgGridFilterType::Text => $this->addTextFilterToQuery($subject, $columnInformation, $filter),
-            AgGridFilterType::Number => $this->addNumberFilterToQuery($subject, $columnInformation, $filter),
-            AgGridFilterType::Date => $this->addDateFilterToQuery($subject, $columnInformation, $filter),
+            AgGridFilterType::Set => $this->addSetFilterToQuery($subject, $column, $filter),
+            AgGridFilterType::Text => $this->addTextFilterToQuery($subject, $column, $filter),
+            AgGridFilterType::Number => $this->addNumberFilterToQuery($subject, $column, $filter),
+            AgGridFilterType::Date => $this->addDateFilterToQuery($subject, $column, $filter),
         };
     }
 
-    protected function addSetFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
+    protected function addSetFilterToQuery(EloquentBuilder|Relation $subject, Column $column, array $filter): void
     {
-        $isJsonColumn = $columnInformation->isJsonColumn();
-        $column = $columnInformation->getColumnAsJsonPath();
+        $isJsonColumn = $column->isJsonColumn();
+        $columnName = $column->getNameAsJsonPath();
         $values = $filter['values'];
         $all = $filter['all'] ?? false;
         $filteredValues = array_filter($values, fn ($value) => $value !== null);
 
-        $subject->where(function (EloquentBuilder $query) use ($columnInformation, $all, $column, $values, $filteredValues, $isJsonColumn) {
+        $subject->where(function (EloquentBuilder $query) use ($column, $all, $columnName, $values, $filteredValues, $isJsonColumn) {
             if (count($filteredValues) !== count($values)) {
                 // there was a null in there
-                $query->whereNull($column);
+                $query->whereNull($columnName);
             }
 
             if ($isJsonColumn) {
                 // TODO: this does not work at the moment because laravel has no support for the ?& and ?| operators
                 // TODO: find a workaround!
                 $query->orWhere(
-                    $columnInformation->getColumnAsJsonAccessor(),
+                    $column->getNameAsJsonAccessor(),
                     $all ? '?&' : '?|', '{'.implode(',', $filteredValues).'}',
                 );
             } else {
-                $query->orWhereIn($column, $filteredValues);
+                $query->orWhereIn($columnName, $filteredValues);
             }
         });
     }
 
-    protected function addTextFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
+    protected function addTextFilterToQuery(EloquentBuilder|Relation $subject, Column $column, array $filter): void
     {
-        $column = $columnInformation->getColumnAsJsonPath();
+        $columnName = $column->getNameAsJsonPath();
         $value = $filter['filter'] ?? null;
         $type = AgGridTextFilterType::from($filter['type']);
 
         match ($type) {
-            AgGridTextFilterType::Equals => $subject->where($column, '=', $value),
-            AgGridTextFilterType::NotEqual => $subject->where($column, '!=', $value),
-            AgGridTextFilterType::Contains => $subject->where($column, 'ilike', '%'.$value.'%'),
-            AgGridTextFilterType::NotContains => $subject->where($column, 'not ilike', '%'.$value.'%'),
-            AgGridTextFilterType::StartsWith => $subject->where($column, 'ilike', $value.'%'),
-            AgGridTextFilterType::EndsWith => $subject->where($column, 'ilike', '%'.$value),
-            AgGridTextFilterType::Blank => $subject->whereNull($column),
-            AgGridTextFilterType::NotBlank => $subject->whereNotNull($column),
+            AgGridTextFilterType::Equals => $subject->where($columnName, '=', $value),
+            AgGridTextFilterType::NotEqual => $subject->where($columnName, '!=', $value),
+            AgGridTextFilterType::Contains => $subject->where($columnName, 'ilike', '%'.$value.'%'),
+            AgGridTextFilterType::NotContains => $subject->where($columnName, 'not ilike', '%'.$value.'%'),
+            AgGridTextFilterType::StartsWith => $subject->where($columnName, 'ilike', $value.'%'),
+            AgGridTextFilterType::EndsWith => $subject->where($columnName, 'ilike', '%'.$value),
+            AgGridTextFilterType::Blank => $subject->whereNull($columnName),
+            AgGridTextFilterType::NotBlank => $subject->whereNotNull($columnName),
         };
     }
 
-    protected function addNumberFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
+    protected function addNumberFilterToQuery(EloquentBuilder|Relation $subject, Column $column, array $filter): void
     {
-        $column = $columnInformation->getColumnAsJsonPath();
+        $columnName = $column->getNameAsJsonPath();
         $value = $filter['filter'];
         $type = AgGridNumberFilterType::from($filter['type']);
 
         match ($type) {
-            AgGridNumberFilterType::Equals => $subject->where($column, '=', $value),
-            AgGridNumberFilterType::NotEqual => $subject->where($column, '!=', $value),
-            AgGridNumberFilterType::GreaterThan => $subject->where($column, '>', $value),
-            AgGridNumberFilterType::GreaterThanOrEqual => $subject->where($column, '>=', $value),
-            AgGridNumberFilterType::LessThan => $subject->where($column, '<', $value),
-            AgGridNumberFilterType::LessThanOrEqual => $subject->where($column, '<=', $value),
-            AgGridNumberFilterType::InRange => $subject->where($column, '>=', $value)->where($column, '<=', $filter['filterTo']),
-            AgGridNumberFilterType::Blank => $subject->whereNull($column),
-            AgGridNumberFilterType::NotBlank => $subject->whereNotNull($column),
+            AgGridNumberFilterType::Equals => $subject->where($columnName, '=', $value),
+            AgGridNumberFilterType::NotEqual => $subject->where($columnName, '!=', $value),
+            AgGridNumberFilterType::GreaterThan => $subject->where($columnName, '>', $value),
+            AgGridNumberFilterType::GreaterThanOrEqual => $subject->where($columnName, '>=', $value),
+            AgGridNumberFilterType::LessThan => $subject->where($columnName, '<', $value),
+            AgGridNumberFilterType::LessThanOrEqual => $subject->where($columnName, '<=', $value),
+            AgGridNumberFilterType::InRange => $subject->where($columnName, '>=', $value)->where($columnName, '<=', $filter['filterTo']),
+            AgGridNumberFilterType::Blank => $subject->whereNull($columnName),
+            AgGridNumberFilterType::NotBlank => $subject->whereNotNull($columnName),
         };
     }
 
-    protected function addDateFilterToQuery(EloquentBuilder|Relation $subject, ColumnMetadata $columnInformation, array $filter): void
+    protected function addDateFilterToQuery(EloquentBuilder|Relation $subject, Column $column, array $filter): void
     {
-        $column = $columnInformation->getColumnAsJsonPath();
+        $columnName = $column->getNameAsJsonPath();
         $dateFrom = isset($filter['dateFrom']) ? new \DateTime($filter['dateFrom']) : null;
         $dateTo = isset($filter['dateTo']) ? new \DateTime($filter['dateTo']) : null;
 
         match (AgGridDateFilterType::from($filter['type'])) {
-            AgGridDateFilterType::Equals => $subject->whereDate($column, '=', $dateFrom),
-            AgGridDateFilterType::NotEqual => $subject->whereDate($column, '!=', $dateFrom),
-            AgGridDateFilterType::GreaterThan => $subject->whereDate($column, '>=', $dateFrom),
-            AgGridDateFilterType::LessThan => $subject->whereDate($column, '<=', $dateFrom),
-            AgGridDateFilterType::InRange => $subject->whereDate($column, '>=', $dateFrom)->whereDate($column, '<=', $dateTo),
-            AgGridDateFilterType::Blank => $subject->whereNull($column),
-            AgGridDateFilterType::NotBlank => $subject->whereNotNull($column),
+            AgGridDateFilterType::Equals => $subject->whereDate($columnName, '=', $dateFrom),
+            AgGridDateFilterType::NotEqual => $subject->whereDate($columnName, '!=', $dateFrom),
+            AgGridDateFilterType::GreaterThan => $subject->whereDate($columnName, '>=', $dateFrom),
+            AgGridDateFilterType::LessThan => $subject->whereDate($columnName, '<=', $dateFrom),
+            AgGridDateFilterType::InRange => $subject->whereDate($columnName, '>=', $dateFrom)->whereDate($columnName, '<=', $dateTo),
+            AgGridDateFilterType::Blank => $subject->whereNull($columnName),
+            AgGridDateFilterType::NotBlank => $subject->whereNotNull($columnName),
         };
     }
 

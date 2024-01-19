@@ -28,7 +28,7 @@ class AgGridExport implements FromQuery, ShouldAutoSize, WithColumnFormatting, W
 
     public function __construct(
         private readonly Builder|Relation $queryBuilder,
-        ?array $columnsToExport = null
+        array $columnsToExport = null
     ) {
         $model = $this->queryBuilder->getModel();
 

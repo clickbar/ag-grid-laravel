@@ -17,7 +17,7 @@ beforeEach(function () {
     ])->for($this->keeper)->create();
 });
 
-function buildTextFilter(AgGridTextFilterType $type, ?string $value = null): array
+function buildTextFilter(AgGridTextFilterType $type, string $value = null): array
 {
     return [
         'filterModel' => [
