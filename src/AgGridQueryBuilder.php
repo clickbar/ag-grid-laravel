@@ -292,8 +292,8 @@ class AgGridQueryBuilder implements Responsable
         }
 
         foreach ($sorts as $sort) {
-            $columnInformation = Column::fromColId($this->subject, $sort['colId']);
-            $this->subject->orderBy($columnInformation->getNameAsJsonPath(), $sort['sort']);
+            $column = Column::fromColId($this->subject, $sort['colId']);
+            $this->subject->orderBy($column->getNameAsJsonPath(), $sort['sort']);
         }
 
         // we need an additional sort condition so that the order is stable in all cases

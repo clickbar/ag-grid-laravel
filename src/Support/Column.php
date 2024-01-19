@@ -12,8 +12,12 @@ use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionMethod;
 
-class Column
+readonly class Column
 {
+    protected bool $isJsonColumn;
+
+    protected bool $isNestedJsonColumn;
+
     public function __construct(
         protected Model $baseModel,
         /** @var RelationMetadata[] */
@@ -21,11 +25,32 @@ class Column
         protected string $colId,
         protected string $name,
     ) {
+        // check for json columns
+
+        $hasPathAccessor = str_contains($this->name, '.');
+        if ($hasPathAccessor) {
+            $this->isJsonColumn = true;
+        } else {
+            $model = collect($this->relations)->last()?->model ?? $this->baseModel;
+            $colum = Str::before($this->name, '.');
+
+            $this->isJsonColumn = $model->hasCast($colum, [
+                'array',
+                'json',
+                'object',
+                'collection',
+                'encrypted:array',
+                'encrypted:collection',
+                'encrypted:json',
+                'encrypted:object',
+            ]);
+        }
+
+        $this->isNestedJsonColumn = $this->isJsonColumn && $hasPathAccessor;
     }
 
     public static function fromColId(EloquentBuilder|Relation $subject, string $colId): self
     {
-
         $parts = Str::of($colId)->explode('.');
 
         if ($parts->count() === 1) {
@@ -58,7 +83,6 @@ class Column
         }
 
         return new self($subject->getModel(), $relations, $colId, $name);
-
     }
 
     protected static function getRelations(string $modelClass): Collection
@@ -104,19 +128,7 @@ class Column
      */
     public function isJsonColumn(): bool
     {
-        $model = collect($this->relations)->last()?->model ?? $this->baseModel;
-        $colum = Str::before($this->name, '.');
-
-        return str_contains($this->name, '.') || $model->hasCast($colum, [
-            'array',
-            'json',
-            'object',
-            'collection',
-            'encrypted:array',
-            'encrypted:collection',
-            'encrypted:json',
-            'encrypted:object',
-        ]);
+        return $this->isJsonColumn;
     }
 
     /**
@@ -124,7 +136,7 @@ class Column
      */
     public function isNestedJsonColumn(): bool
     {
-        return $this->isJsonColumn() && Str::contains($this->name, '.');
+        return $this->isNestedJsonColumn;
     }
 
     /**
@@ -140,8 +152,7 @@ class Column
      */
     public function getNameAsJsonAccessor(): Expression|string
     {
-        if (! Str::contains($this->name, '.')) {
-            // --> No nested json
+        if (! $this->isNestedJsonColumn) {
             return $this->name;
         }
 
