@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\FlamingoGridController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FlamingoViewGridController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,3 +15,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/flamingos/rows', [FlamingoGridController::class, 'rows'])->name('flamingos.rows');
+
+Route::agGrid('view/flamingos', FlamingoViewGridController::class)->name('view.flamingos');
