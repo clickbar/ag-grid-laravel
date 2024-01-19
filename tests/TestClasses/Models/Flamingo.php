@@ -101,7 +101,7 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
 
     public static function provideAgGridSetValues(string $column): ?array
     {
-       return match ($column) {
+        return match ($column) {
             'species' => FlamingoSpecies::setValues(),
             default => null
         };

@@ -18,6 +18,6 @@ enum FlamingoSpecies: string
      */
     public static function setValues(): array
     {
-        return array_map(fn(FlamingoSpecies $enum) => AgGridSetValue::fromValue($enum->value), self::cases());
+        return array_map(fn (FlamingoSpecies $enum) => AgGridSetValue::fromValue($enum->value), self::cases());
     }
 }
