@@ -13,6 +13,11 @@
             "name": "Jan Becker",
             "email": "jb@clickbar.dev",
             "role": "Developer"
+        },
+        {
+            "name": "Adrian Hawlitschek",
+            "email": "ah@clickbar.dev",
+            "role": "Developer"
         }
     ],
     "require": {

@@ -6,6 +6,7 @@ use Clickbar\AgGrid\AgGridColumnDefinition;
 use Clickbar\AgGrid\Contracts\AgGridCustomFilterable;
 use Clickbar\AgGrid\Contracts\AgGridExportable;
 use Clickbar\AgGrid\Formatters\AgGridArrayFormatter;
+use Clickbar\AgGrid\Formatters\AgGridBackedEnumFormatter;
 use Clickbar\AgGrid\Formatters\AgGridBooleanFormatter;
 use Clickbar\AgGrid\Formatters\AgGridDateFormatter;
 use Clickbar\AgGrid\Formatters\AgGridDateTimeFormatter;
@@ -59,6 +60,7 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
             new AgGridColumnDefinition(
                 'species',
                 __('Species'),
+                new AgGridBackedEnumFormatter(),
             ),
             new AgGridColumnDefinition(
                 'weight',

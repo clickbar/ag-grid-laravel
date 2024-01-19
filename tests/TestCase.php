@@ -56,6 +56,7 @@ class TestCase extends Orchestra
             $table->id();
             $table->timestamps();
             $table->string('name');
+            $table->string('species');
             $table->float('weight');
             $table->jsonb('preferred_food_types');
             $table->jsonb('custom_properties')->nullable();
