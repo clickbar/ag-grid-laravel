@@ -18,6 +18,7 @@ return new class extends Migration
                 -- Flamingo
                 flamingos.id AS id,
                 flamingos.name AS flamingo_name,
+                flamingos.species AS flamingo_species,
                 flamingos.weight AS flamingo_weight,
                 flamingos.preferred_food_types AS flamingo_preferred_food_types,
                 flamingos.custom_properties AS flamingo_custom_properties,

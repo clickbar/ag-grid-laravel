@@ -129,8 +129,9 @@ class AgGridQueryBuilder implements Responsable
             throw UnauthorizedSetFilterColumn::make($column);
         }
 
-        if ($this->getModel() instanceof AgGridSetValueProvider) {
-            $providedSetValues = $this->getModel()->provideAgGridSetValues($column);
+        $model = $this->getModel();
+        if ($model instanceof AgGridSetValueProvider) {
+            $providedSetValues = $model->provideAgGridSetValues($column);
             if ($providedSetValues) {
                 return Collection::make($providedSetValues);
             }

@@ -8,9 +8,17 @@ export type FoodType = 'shrimp'
 | 'pellets'
 | 'vegetables'
 
+export type FlamingoSpecies = 'greater'
+| 'lesser'
+| 'chilean'
+| 'james'
+| 'andean'
+| 'american'
+
 export interface FlamingoResource {
     id: number
     name: string
+    species: FlamingoSpecies
     weight: number
     preferred_food_types: FoodType[]
     custom_properties: Record<string, any> | null
@@ -24,6 +32,7 @@ export interface FlamingoResource {
 
 type FlamingoColumnNames = 'id'
 | 'name'
+| 'species'
 | 'weight'
 | 'preferred_food_types'
 | 'custom_properties'
@@ -49,8 +58,13 @@ export const flamingoColumns: Record<FlamingoColumnNames, ColDef> = {
         filter: 'agTextColumnFilter',
         sortable: true,
     },
+    species: {
+        headerValueGetter: () => 'Species',
+        field: 'species',
+        sortable: true,
+    },
     weight: {
-        headerValueGetter: () => 'Gewicht',
+        headerValueGetter: () => 'Weight',
         field: 'weight',
         filter: 'agNumberColumnFilter',
         sortable: true,

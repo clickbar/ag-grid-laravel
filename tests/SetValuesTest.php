@@ -3,6 +3,7 @@
 use Clickbar\AgGrid\AgGridQueryBuilder;
 use Clickbar\AgGrid\Exceptions\InvalidSetValueOperation;
 use Clickbar\AgGrid\Exceptions\UnauthorizedSetFilterColumn;
+use Clickbar\AgGrid\Tests\TestClasses\Enums\FlamingoSpecies;
 use Clickbar\AgGrid\Tests\TestClasses\Models\Flamingo;
 use Clickbar\AgGrid\Tests\TestClasses\Models\Keeper;
 use Clickbar\AgGrid\Tests\TestClasses\Models\Zoo;
@@ -223,3 +224,16 @@ it('throws exception when trying to retrieve set filter with null column in para
 
     $queryBuilder->toSetValues(['flamingo_name']);
 })->throws(InvalidSetValueOperation::class);
+
+it('returns the provided set values', function () {
+    $queryBuilder = new AgGridQueryBuilder(
+        [
+            'column' => 'species',
+        ],
+        Flamingo::class,
+    );
+
+    $setValues = $queryBuilder->toSetValues(['species']);
+
+    expect($setValues->toArray())->toMatchArray(FlamingoSpecies::setValues());
+});

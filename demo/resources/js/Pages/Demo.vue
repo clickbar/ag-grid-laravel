@@ -20,6 +20,7 @@ const dataSourceUrl = route('api.flamingos.rows')
 const columnDefs = pickColumns(flamingoColumns, [
     'id',
     'name',
+    'species',
     'weight',
     'preferred_food_types',
     'custom_properties',
@@ -33,8 +34,6 @@ const columnDefs = pickColumns(flamingoColumns, [
 function getRowId(parameters: GetRowIdParams) {
     return parameters.data.id
 }
-
-console.log(columnDefs)
 
 </script>
 
