@@ -292,7 +292,8 @@ class AgGridQueryBuilder implements Responsable
         }
 
         foreach ($sorts as $sort) {
-            $this->subject->orderBy($this->toJsonPath($sort['colId']), $sort['sort']);
+            $columnInformation = ColumnMetadata::fromString($this->subject, $sort['colId']);
+            $this->subject->orderBy($columnInformation->getColumnAsJsonPath(), $sort['sort']);
         }
 
         // we need an additional sort condition so that the order is stable in all cases
@@ -401,11 +402,6 @@ class AgGridQueryBuilder implements Responsable
             AgGridDateFilterType::Blank => $subject->whereNull($column),
             AgGridDateFilterType::NotBlank => $subject->whereNotNull($column),
         };
-    }
-
-    protected function toJsonPath(string $key): string
-    {
-        return str_replace('.', '->', $key);
     }
 
     protected function traverse($model, $key, $default = null): Model
