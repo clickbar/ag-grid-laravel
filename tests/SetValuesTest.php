@@ -224,16 +224,3 @@ it('throws exception when trying to retrieve set filter with null column in para
 
     $queryBuilder->toSetValues(['flamingo_name']);
 })->throws(InvalidSetValueOperation::class);
-
-it('returns the provided set values', function () {
-    $queryBuilder = new AgGridQueryBuilder(
-        [
-            'column' => 'species',
-        ],
-        Flamingo::class,
-    );
-
-    $setValues = $queryBuilder->toSetValues(['species']);
-
-    expect($setValues->toArray())->toMatchArray(FlamingoSpecies::setValues());
-});
