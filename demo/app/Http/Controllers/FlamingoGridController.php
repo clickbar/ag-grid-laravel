@@ -6,6 +6,7 @@ use App\Http\Resources\FlamingoResource;
 use App\Models\Flamingo;
 use Clickbar\AgGrid\AgGridQueryBuilder;
 use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
+use Clickbar\AgGrid\Requests\AgGridSetValuesRequest;
 
 class FlamingoGridController extends Controller
 {
@@ -17,5 +18,14 @@ class FlamingoGridController extends Controller
 
         return AgGridQueryBuilder::forRequest($request, $query)
             ->resource(FlamingoResource::class);
+    }
+
+    public function setValues(AgGridSetValuesRequest $request)
+    {
+        $query = Flamingo::query()
+            ->with(['keeper']);
+
+        return AgGridQueryBuilder::forSetValuesRequest($request, $query)
+            ->toSetValues(['*']);
     }
 }

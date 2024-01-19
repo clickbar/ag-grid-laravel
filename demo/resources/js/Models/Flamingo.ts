@@ -56,13 +56,24 @@ export const flamingoColumns: Record<FlamingoColumnNames, ColDef> = {
     name: {
         headerValueGetter: () => 'Name',
         field: 'name',
-        filter: 'agTextColumnFilter',
         sortable: true,
+        filter: true,
+        ...getSetFilterParametersFor(
+            'name',
+            route('api.flamingos.set-values'
+            )
+        )
     },
     species: {
         headerValueGetter: () => 'Species',
         field: 'species',
         sortable: true,
+        filter: true,
+        ...getSetFilterParametersFor(
+            'species',
+            route('api.flamingos.set-values'
+            )
+        )
     },
     weight: {
         headerValueGetter: () => 'Weight',
@@ -74,6 +85,11 @@ export const flamingoColumns: Record<FlamingoColumnNames, ColDef> = {
         headerValueGetter: () => 'Preferred food types',
         field: 'preferred_food_types',
         filter: true,
+        ...getSetFilterParametersFor(
+            'preferred_food_types',
+            route('api.flamingos.set-values'
+            )
+        )
     },
     custom_properties: {
         headerValueGetter: () => 'Custom properties',
@@ -103,22 +119,19 @@ export const flamingoColumns: Record<FlamingoColumnNames, ColDef> = {
     keeper: {
         headerValueGetter: () => 'Keeper',
         field: 'keeper.name',
-        filter: 'agTextColumnFilter',
-        sortable: true,
+        sortable: false,
         valueGetter(parameters: ValueGetterParams) {
             return parameters.data.keeper
         },
         valueFormatter(parameters: ValueFormatterParams) {
             return parameters.value.name
         },
-        filterParams: {
-            keyCreator(parameters: KeyCreatorParams) {
-                return parameters.value.id
-            },
-            valueFormatter(parameters: ValueFormatterParams) {
-                return parameters.value.name
-            },
-        },
+        filter: true,
+        ...getSetFilterParametersFor(
+            'keeper.name',
+            route('api.flamingos.set-values'
+            )
+        )
     },
     updated_at: {
         headerValueGetter: () => 'Updated at',

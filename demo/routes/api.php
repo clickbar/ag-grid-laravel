@@ -14,6 +14,5 @@ use App\Http\Controllers\FlamingoViewGridController;
 |
 */
 
-Route::post('/flamingos/rows', [FlamingoGridController::class, 'rows'])->name('flamingos.rows');
-
+Route::agGrid('/flamingos/rows', FlamingoGridController::class)->name('flamingos');
 Route::agGrid('view/flamingos', FlamingoViewGridController::class)->name('view.flamingos');
