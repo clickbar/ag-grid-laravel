@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionMethod;
 
-readonly class Column
+class Column
 {
     protected bool $isJsonColumn;
 
