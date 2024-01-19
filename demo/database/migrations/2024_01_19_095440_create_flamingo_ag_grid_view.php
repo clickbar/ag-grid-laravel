@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -14,7 +12,7 @@ return new class extends Migration
     {
         DB::statement('DROP VIEW IF EXISTS flamingo_ag_grid_view;');
 
-        $sql = <<<SQL
+        $sql = <<<'SQL'
             CREATE VIEW flamingo_ag_grid_view AS
             SELECT
                 -- Flamingo

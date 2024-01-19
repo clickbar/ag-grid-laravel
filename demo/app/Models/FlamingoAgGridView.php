@@ -6,7 +6,6 @@ use Clickbar\AgGrid\Model\AgGridViewModel;
 
 class FlamingoAgGridView extends AgGridViewModel
 {
-
     protected $table = 'flamingo_ag_grid_view';
 
     protected $casts = [
@@ -25,5 +24,4 @@ class FlamingoAgGridView extends AgGridViewModel
         'zoo_created_at' => 'immutable_datetime',
         'zoo_updated_at' => 'immutable_datetime',
     ];
-
 }
