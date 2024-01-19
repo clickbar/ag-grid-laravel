@@ -17,7 +17,7 @@ beforeEach(function () {
     ])->for($this->keeper)->create();
 });
 
-function buildNumberFilter(AgGridNumberFilterType $type, float $value1, ?float $value2 = null): array
+function buildNumberFilter(AgGridNumberFilterType $type, float $value1, float $value2 = null): array
 {
     return [
         'filterModel' => [

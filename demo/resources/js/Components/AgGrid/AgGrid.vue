@@ -201,7 +201,7 @@ async function exportServerSide(format: 'excel' | 'csv', onlySelected: boolean) 
       ...parameters,
       ...(onlySelected ? api?.getServerSideSelectionState() : {}),
       exportFormat: format,
-      exportCols: cols,
+      exportColumns: cols,
       customFilters: props.customFilters,
     },
     {

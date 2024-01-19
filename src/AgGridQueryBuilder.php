@@ -3,6 +3,7 @@
 namespace Clickbar\AgGrid;
 
 use Clickbar\AgGrid\Contracts\AgGridCustomFilterable;
+use Clickbar\AgGrid\Contracts\AgGridHasVirtualColumns;
 use Clickbar\AgGrid\Enums\AgGridDateFilterType;
 use Clickbar\AgGrid\Enums\AgGridExportFormat;
 use Clickbar\AgGrid\Enums\AgGridFilterType;
@@ -40,6 +41,8 @@ class AgGridQueryBuilder implements Responsable
     /** @var class-string<JsonResource> | null */
     protected ?string $resourceClass = null;
 
+    protected array $virtualColumns = [];
+
     /**
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
      */
@@ -53,6 +56,10 @@ class AgGridQueryBuilder implements Responsable
         $this->subject = $subject;
 
         $model = $subject->getModel();
+        if ($model instanceof AgGridHasVirtualColumns) {
+            $this->virtualColumns = $model->getVirtualColumns();
+        }
+
         if ($model instanceof AgGridCustomFilterable) {
             $model->applyAgGridCustomFilters($this->subject, $this->params['customFilters'] ?? []);
         }
@@ -122,6 +129,10 @@ class AgGridQueryBuilder implements Responsable
         $colId = Arr::get($this->params, 'column');
         if (empty($colId)) {
             throw InvalidSetValueOperation::make();
+        }
+
+        if ($this->hasVirtualColumnFor($colId)) {
+            return $this->virtualColumns[$colId]->getSetValues($this);
         }
 
         if (collect($allowedColumns)->first() !== '*' && ! in_array($colId, $allowedColumns)) {
@@ -204,6 +215,14 @@ class AgGridQueryBuilder implements Responsable
 
         $data = $this->get();
 
+        if (! empty($this->virtualColumns)) {
+            foreach ($data as $row) {
+                foreach ($this->virtualColumns as $key => $virtualColumn) {
+                    $row[$key] = $virtualColumn->getValue($row);
+                }
+            }
+        }
+
         // wrap in a resource
         if ($this->resourceClass !== null) {
             /** @var class-string<JsonResource> $resourceClass */
@@ -266,7 +285,12 @@ class AgGridQueryBuilder implements Responsable
 
         foreach ($filters as $colId => $filter) {
 
-            $column = Column::fromColId($this->subject, $colId);
+            if ($this->hasVirtualColumnFor($colId)) {
+                $column = Column::fromColId($this->subject, $this->virtualColumns[$colId]->getFilterColumn());
+
+            } else {
+                $column = Column::fromColId($this->subject, $colId);
+            }
 
             if ($column->hasRelations()) {
                 $this->subject->whereHas($column->getDottedRelation(), function (EloquentBuilder $builder) use ($column, $filter) {
@@ -292,8 +316,15 @@ class AgGridQueryBuilder implements Responsable
         }
 
         foreach ($sorts as $sort) {
-            $column = Column::fromColId($this->subject, $sort['colId']);
-            $this->subject->orderBy($column->getNameAsJsonPath(), $sort['sort']);
+            $colId = $sort['colId'];
+            if ($this->hasVirtualColumnFor($colId)) {
+                $columnNames = $this->virtualColumns[$colId]->getOrderColumns();
+            } else {
+                $columnNames = [Column::fromColId($this->subject, $colId)->getNameAsJsonPath()];
+            }
+            foreach ($columnNames as $columnName) {
+                $this->subject->orderBy($columnName, $sort['sort']);
+            }
         }
 
         // we need an additional sort condition so that the order is stable in all cases
@@ -427,5 +458,10 @@ class AgGridQueryBuilder implements Responsable
         }
 
         return $model;
+    }
+
+    protected function hasVirtualColumnFor(string $colId): bool
+    {
+        return array_key_exists($colId, $this->virtualColumns);
     }
 }
