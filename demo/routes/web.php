@@ -15,5 +15,5 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', DemoController::class);
-Route::get('/view', ViewDemoController::class);
+Route::get('/', DemoController::class)->name('demo');
+Route::get('/view', ViewDemoController::class)->name('view-demo');

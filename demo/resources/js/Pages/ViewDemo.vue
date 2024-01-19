@@ -1,8 +1,6 @@
 <template>
     <Head title="Demo" />
-
     <AppLayout>
-
         <AgGrid
             :column-defs="flamingoViewColumnDefinition"
             :data-source-url="dataSourceUrl"
@@ -23,10 +21,6 @@ const dataSourceUrl = route('api.view.flamingos')
 function getRowId(parameters: GetRowIdParams) {
     return parameters.data.id
 }
-
-
-console.log(flamingoViewColumnDefinition)
-
 
 </script>
 
