@@ -13,7 +13,7 @@ abstract class AgGridVirtualColumn
     /**
      * Build the value for this virtual column
      *
-     * @param  T  $row with all columns
+     * @param  T  $row  with all columns
      */
     abstract public function getValue($row): mixed;
 
