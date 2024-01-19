@@ -5,7 +5,6 @@ namespace Clickbar\AgGrid\Tests\TestClasses\Models;
 use Clickbar\AgGrid\AgGridColumnDefinition;
 use Clickbar\AgGrid\Contracts\AgGridCustomFilterable;
 use Clickbar\AgGrid\Contracts\AgGridExportable;
-use Clickbar\AgGrid\Contracts\AgGridSetValueProvider;
 use Clickbar\AgGrid\Formatters\AgGridArrayFormatter;
 use Clickbar\AgGrid\Formatters\AgGridBooleanFormatter;
 use Clickbar\AgGrid\Formatters\AgGridDateFormatter;
@@ -17,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable, AgGridSetValueProvider
+class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
 {
     use HasFactory;
     use SoftDeletes;
