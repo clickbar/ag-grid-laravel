@@ -130,7 +130,6 @@ class AgGridQueryBuilder implements Responsable
 
         $columnMetadata = ColumnMetadata::fromString($this->subject, $column);
 
-
         if ($columnMetadata->hasRelations()) {
 
             $dottedRelation = $columnMetadata->getDottedRelation();
