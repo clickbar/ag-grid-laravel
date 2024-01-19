@@ -213,9 +213,14 @@ export const flamingoViewColumnDefinition = [
             {
                 headerValueGetter: () => 'Custom properties',
                 field: 'flamingo_custom_properties',
-                filter: false,
+                filter: true,
                 sortable: false,
-                suppressMenu: true
+                suppressMenu: false,
+                ...getSetFilterParametersFor(
+                    'flamingo_custom_properties',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
             },
             {
                 headerValueGetter: () => 'Is hungry',
@@ -243,11 +248,11 @@ export const flamingoViewColumnDefinition = [
         children: [
             {
                 headerValueGetter: () => 'Name',
-                field: 'keeper_name',
+                field: 'keeper',
                 sortable: true,
                 filter: true,
                 ...getSetFilterParametersFor(
-                    'keeper_name',
+                    'keeper',
                     route('api.view.flamingos.set-values'
                     )
                 )
