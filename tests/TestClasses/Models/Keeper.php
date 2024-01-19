@@ -4,6 +4,7 @@ namespace Clickbar\AgGrid\Tests\TestClasses\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Keeper extends Model
@@ -20,5 +21,10 @@ class Keeper extends Model
     public function flamingos(): HasMany
     {
         return $this->hasMany(Flamingo::class);
+    }
+
+    public function zoo(): BelongsTo
+    {
+        return $this->belongsTo(Zoo::class);
     }
 }

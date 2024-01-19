@@ -1,16 +1,25 @@
-import type { KeeperResource } from "@/Models/Keeper";
-import type { ColDef, KeyCreatorParams, ValueFormatterParams, ValueGetterParams } from "ag-grid-community";
+import type {KeeperResource} from "@/Models/Keeper";
+import type {ColDef, KeyCreatorParams, ValueFormatterParams, ValueGetterParams} from "ag-grid-community";
+import {getSetFilterParametersFor} from "@/Utils/ag-grid";
 
 export type FoodType = 'shrimp'
-| 'algae'
-| 'fish'
-| 'insects'
-| 'pellets'
-| 'vegetables'
+    | 'algae'
+    | 'fish'
+    | 'insects'
+    | 'pellets'
+    | 'vegetables'
+
+export type FlamingoSpecies = 'greater'
+    | 'lesser'
+    | 'chilean'
+    | 'james'
+    | 'andean'
+    | 'american'
 
 export interface FlamingoResource {
     id: number
     name: string
+    species: FlamingoSpecies
     weight: number
     preferred_food_types: FoodType[]
     custom_properties: Record<string, any> | null
@@ -23,15 +32,16 @@ export interface FlamingoResource {
 }
 
 type FlamingoColumnNames = 'id'
-| 'name'
-| 'weight'
-| 'preferred_food_types'
-| 'custom_properties'
-| 'is_hungry'
-| 'last_vaccinated_on'
-| 'keeper'
-| 'updated_at'
-| 'created_at'
+    | 'name'
+    | 'species'
+    | 'weight'
+    | 'preferred_food_types'
+    | 'custom_properties'
+    | 'is_hungry'
+    | 'last_vaccinated_on'
+    | 'keeper'
+    | 'updated_at'
+    | 'created_at'
 
 export const flamingoColumns: Record<FlamingoColumnNames, ColDef> = {
     id: {
@@ -46,22 +56,43 @@ export const flamingoColumns: Record<FlamingoColumnNames, ColDef> = {
     name: {
         headerValueGetter: () => 'Name',
         field: 'name',
-        filter: 'agTextColumnFilter',
         sortable: true,
+        filter: true,
+        ...getSetFilterParametersFor(
+            'name',
+            route('api.flamingos.set-values'
+            )
+        )
+    },
+    species: {
+        headerValueGetter: () => 'Species',
+        field: 'species',
+        sortable: true,
+        filter: true,
+        ...getSetFilterParametersFor(
+            'species',
+            route('api.flamingos.set-values'
+            )
+        )
     },
     weight: {
-        headerValueGetter: () => 'Gewicht',
+        headerValueGetter: () => 'Weight',
         field: 'weight',
         filter: 'agNumberColumnFilter',
         sortable: true,
     },
     preferred_food_types: {
-        headerValueGetter: () =>'Preferred food types',
+        headerValueGetter: () => 'Preferred food types',
         field: 'preferred_food_types',
         filter: true,
+        ...getSetFilterParametersFor(
+            'preferred_food_types',
+            route('api.flamingos.set-values'
+            )
+        )
     },
     custom_properties: {
-        headerValueGetter: () =>'Custom properties',
+        headerValueGetter: () => 'Custom properties',
         field: 'custom_properties',
         filter: false,
         sortable: false,
@@ -86,24 +117,21 @@ export const flamingoColumns: Record<FlamingoColumnNames, ColDef> = {
         },
     },
     keeper: {
-        headerValueGetter: () =>'Keeper',
+        headerValueGetter: () => 'Keeper',
         field: 'keeper.name',
-        filter: 'agTextColumnFilter',
-        sortable: true,
-        valueGetter(parameters: ValueGetterParams){
+        sortable: false,
+        valueGetter(parameters: ValueGetterParams) {
             return parameters.data.keeper
         },
         valueFormatter(parameters: ValueFormatterParams) {
             return parameters.value.name
         },
-        filterParams: {
-            keyCreator(parameters: KeyCreatorParams) {
-                return parameters.value.id
-            },
-            valueFormatter(parameters: ValueFormatterParams) {
-                return parameters.value.name
-            },
-        },
+        filter: true,
+        ...getSetFilterParametersFor(
+            'keeper.name',
+            route('api.flamingos.set-values'
+            )
+        )
     },
     updated_at: {
         headerValueGetter: () => 'Updated at',
@@ -130,3 +158,161 @@ export const flamingoColumns: Record<FlamingoColumnNames, ColDef> = {
         },
     },
 }
+
+export const flamingoViewColumnDefinition = [
+
+    {
+        headerName: 'Flamingo',
+        children: [
+            {
+                headerValueGetter: () => 'ID',
+                field: 'id',
+                filter: true,
+                sortable: true,
+                checkboxSelection: true,
+                headerCheckboxSelection: true,
+            },
+            {
+                headerValueGetter: () => 'Name',
+                field: 'flamingo_name',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'flamingo_name',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+            {
+                headerValueGetter: () => 'Species',
+                field: 'flamingo_species',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'flamingo_species',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+            {
+                headerValueGetter: () => 'Weight',
+                field: 'flamingo_weight',
+                filter: 'agNumberColumnFilter',
+                sortable: true,
+            },
+            {
+                headerValueGetter: () => 'Preferred food types',
+                field: 'flamingo_preferred_food_types',
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'flamingo_preferred_food_types',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+            {
+                headerValueGetter: () => 'Custom properties',
+                field: 'flamingo_custom_properties',
+                filter: false,
+                sortable: false,
+                suppressMenu: true
+            },
+            {
+                headerValueGetter: () => 'Is hungry',
+                field: 'flamingo_is_hungry',
+                filter: true,
+                sortable: true,
+            },
+            {
+                headerValueGetter: () => 'Last vaccinated on',
+                field: 'flamingo_last_vaccinated_on',
+                sortable: true,
+                filter: 'agDateColumnFilter',
+                valueFormatter(parameters) {
+                    return (parameters.value as Date).toLocaleDateString()
+                },
+                valueGetter(parameters) {
+                    return new Date(parameters.data.last_vaccinated_on)
+                },
+            },
+
+        ],
+    },
+    {
+        headerName: 'Keeper',
+        children: [
+            {
+                headerValueGetter: () => 'Name',
+                field: 'keeper_name',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'keeper_name',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+        ],
+    },
+    {
+        headerName: 'Zoo',
+        children: [
+            {
+                headerValueGetter: () => 'Name',
+                field: 'zoo_name',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'zoo_name',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+            {
+                headerValueGetter: () => 'Street',
+                field: 'zoo_address.street',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'zoo_address.street',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+            {
+                headerValueGetter: () => 'City',
+                field: 'zoo_address.city',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'zoo_address.city',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+            {
+                headerValueGetter: () => 'Mail',
+                field: 'zoo_address.contact.email',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'zoo_address.contact.email',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+            {
+                headerValueGetter: () => 'Phone',
+                field: 'zoo_address.contact.phone',
+                sortable: true,
+                filter: true,
+                ...getSetFilterParametersFor(
+                    'zoo_address.contact.phone',
+                    route('api.view.flamingos.set-values'
+                    )
+                )
+            },
+        ],
+    },
+
+];

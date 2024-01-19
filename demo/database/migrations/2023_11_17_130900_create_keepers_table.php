@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('keepers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->foreignId('zoo_id')->index()->constrained();
             $table->timestamps();
         });
     }

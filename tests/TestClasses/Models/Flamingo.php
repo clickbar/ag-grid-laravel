@@ -6,9 +6,11 @@ use Clickbar\AgGrid\AgGridColumnDefinition;
 use Clickbar\AgGrid\Contracts\AgGridCustomFilterable;
 use Clickbar\AgGrid\Contracts\AgGridExportable;
 use Clickbar\AgGrid\Formatters\AgGridArrayFormatter;
+use Clickbar\AgGrid\Formatters\AgGridBackedEnumFormatter;
 use Clickbar\AgGrid\Formatters\AgGridBooleanFormatter;
 use Clickbar\AgGrid\Formatters\AgGridDateFormatter;
 use Clickbar\AgGrid\Formatters\AgGridDateTimeFormatter;
+use Clickbar\AgGrid\Tests\TestClasses\Enums\FlamingoSpecies;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +26,7 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
 
     protected $casts = [
         'weight' => 'float',
+        'species' => FlamingoSpecies::class,
         'preferred_food_types' => 'array',
         'last_vaccinated_on' => 'date',
         'custom_properties' => 'array',
@@ -53,6 +56,11 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
             new AgGridColumnDefinition(
                 'name',
                 __('Name'),
+            ),
+            new AgGridColumnDefinition(
+                'species',
+                __('Species'),
+                new AgGridBackedEnumFormatter(),
             ),
             new AgGridColumnDefinition(
                 'weight',
@@ -90,5 +98,13 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
                 new AgGridDateTimeFormatter(),
             ),
         ];
+    }
+
+    public static function provideAgGridSetValues(string $column): ?array
+    {
+        return match ($column) {
+            'species' => FlamingoSpecies::setValues(),
+            default => null
+        };
     }
 }

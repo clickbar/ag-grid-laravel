@@ -38,9 +38,17 @@ class TestCase extends Orchestra
         /** @var DatabaseManager $db */
         $db = $this->app->get('db');
 
+        $db->connection()->getSchemaBuilder()->create('zoos', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->jsonb('address');
+            $table->timestamps();
+        });
+
         $db->connection()->getSchemaBuilder()->create('keepers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->foreignId('zoo_id')->index()->constrained();
             $table->timestamps();
         });
 
@@ -48,13 +56,15 @@ class TestCase extends Orchestra
             $table->id();
             $table->timestamps();
             $table->string('name');
+            $table->string('species');
             $table->float('weight');
             $table->jsonb('preferred_food_types');
             $table->jsonb('custom_properties')->nullable();
             $table->date('last_vaccinated_on')->nullable();
             $table->boolean('is_hungry')->default(false);
             $table->softDeletes();
-            $table->foreignId('keeper_id')->constrained();
+            $table->foreignId('keeper_id')->index()->constrained();
         });
+
     }
 }

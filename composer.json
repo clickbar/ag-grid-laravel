@@ -13,6 +13,11 @@
             "name": "Jan Becker",
             "email": "jb@clickbar.dev",
             "role": "Developer"
+        },
+        {
+            "name": "Adrian Hawlitschek",
+            "email": "ah@clickbar.dev",
+            "role": "Developer"
         }
     ],
     "require": {
@@ -58,7 +63,7 @@
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
-        "format": "vendor/bin/pint"
+        "fix": "vendor/bin/pint"
     },
     "config": {
         "sort-packages": true,

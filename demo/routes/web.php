@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DemoController;
+use App\Http\Controllers\ViewDemoController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,4 +15,5 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', DemoController::class);
+Route::get('/', DemoController::class)->name('demo');
+Route::get('/view', ViewDemoController::class)->name('view-demo');

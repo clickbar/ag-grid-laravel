@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\FlamingoSpecies;
 use Clickbar\AgGrid\AgGridColumnDefinition;
 use Clickbar\AgGrid\Contracts\AgGridCustomFilterable;
 use Clickbar\AgGrid\Contracts\AgGridExportable;
@@ -24,6 +25,7 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
 
     protected $casts = [
         'weight' => 'float',
+        'species' => FlamingoSpecies::class,
         'preferred_food_types' => 'array',
         'last_vaccinated_on' => 'date',
         'custom_properties' => 'array',
@@ -53,6 +55,10 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
             new AgGridColumnDefinition(
                 'name',
                 __('Name'),
+            ),
+            new AgGridColumnDefinition(
+                'species',
+                __('Species'),
             ),
             new AgGridColumnDefinition(
                 'weight',
