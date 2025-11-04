@@ -67,17 +67,17 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
             new AgGridColumnDefinition(
                 'is_hungry',
                 __('Is Hungry'),
-                new AgGridBooleanFormatter()
+                new AgGridBooleanFormatter
             ),
             new AgGridColumnDefinition(
                 'last_vaccinated_on',
                 __('Last Vaccinated'),
-                new AgGridDateFormatter(),
+                new AgGridDateFormatter,
             ),
             new AgGridColumnDefinition(
                 'preferred_food_types',
                 __('Preferred Food Types'),
-                new AgGridArrayFormatter(),
+                new AgGridArrayFormatter,
             ),
             new AgGridColumnDefinition(
                 'keeper_id',
@@ -88,12 +88,12 @@ class Flamingo extends Model implements AgGridCustomFilterable, AgGridExportable
             new AgGridColumnDefinition(
                 'created_at',
                 __('Created At'),
-                new AgGridDateTimeFormatter(),
+                new AgGridDateTimeFormatter,
             ),
             new AgGridColumnDefinition(
                 'updated_at',
                 __('Updated At'),
-                new AgGridDateTimeFormatter(),
+                new AgGridDateTimeFormatter,
             ),
         ];
     }

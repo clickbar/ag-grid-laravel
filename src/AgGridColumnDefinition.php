@@ -12,6 +12,5 @@ class AgGridColumnDefinition
         public ?AgGridValueFormatter $valueFormatter = null,
         public ?\Closure $valueGetter = null,
         public ?string $excelFormat = null
-    ) {
-    }
+    ) {}
 }

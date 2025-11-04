@@ -7,8 +7,7 @@ class AgGridSetValue
     public function __construct(
         public readonly string|int $value,
         public readonly ?string $label = null,
-    ) {
-    }
+    ) {}
 
     public static function fromValue(string|int|null $value): ?self
     {
