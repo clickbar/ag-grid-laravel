@@ -31,7 +31,7 @@ class Column
         if ($hasPathAccessor) {
             $this->isJsonColumn = true;
         } else {
-            $model = collect($this->relations)->last()?->model ?? $this->baseModel;
+            $model = collect($this->relations)->last()->model ?? $this->baseModel;
             $colum = Str::before($this->name, '.');
 
             $this->isJsonColumn = $model->hasCast($colum, [

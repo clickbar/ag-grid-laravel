@@ -196,7 +196,6 @@ class AgGridQueryBuilder implements Responsable
 
         $clone = $this->clone();
         tap($clone->getQuery(), function (QueryBuilder $query) {
-            /** @phpstan-ignore-next-line */
             $query->limit = $query->offset = $query->orders = null;
             $query->cleanBindings(['order']);
         });
@@ -421,7 +420,7 @@ class AgGridQueryBuilder implements Responsable
         foreach (explode('.', $key) as $segment) {
             try {
                 $model = $model->$segment;
-            } catch (\Exception $e) { // @phpstan-ignore-line
+            } catch (\Exception $e) {
                 return value($default);
             }
         }
