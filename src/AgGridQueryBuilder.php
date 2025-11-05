@@ -403,10 +403,10 @@ class AgGridQueryBuilder implements Responsable
         };
     }
 
-    protected function traverse($model, $key, $default = null): Model
+    protected function traverse($model, $key): Model
     {
         if (is_array($model)) {
-            return Arr::get($model, $key, $default);
+            return Arr::get($model, $key);
         }
 
         if (is_null($key)) {
@@ -418,11 +418,7 @@ class AgGridQueryBuilder implements Responsable
         }
 
         foreach (explode('.', $key) as $segment) {
-            try {
-                $model = $model->$segment;
-            } catch (\Exception $e) {
-                return value($default);
-            }
+            $model = $model->$segment;
         }
 
         return $model;
