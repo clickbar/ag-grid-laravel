@@ -9,6 +9,5 @@ class RelationMetadata
     public function __construct(
         public string $name,
         public Model $model,
-    ) {
-    }
+    ) {}
 }

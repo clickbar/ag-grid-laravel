@@ -19,7 +19,7 @@ it('handles excel exports correctly', function () {
         Flamingo::class,
     );
 
-    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request()));
+    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request));
 
     $response->assertDownload('export.xlsx');
 });
@@ -32,7 +32,7 @@ it('handles csv exports correctly', function () {
         Flamingo::class,
     );
 
-    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request()));
+    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request));
 
     $response->assertDownload('export.csv');
 });
@@ -45,7 +45,7 @@ it('handles tsv exports correctly', function () {
         Flamingo::class,
     );
 
-    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request()));
+    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request));
 
     $response->assertDownload('export.csv');
 });
@@ -59,7 +59,7 @@ it('only exports selected columns', function () {
         Flamingo::class,
     );
 
-    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request()));
+    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request));
 
     $response->assertDownload('export.csv');
 });
@@ -73,7 +73,7 @@ it('does not crash when a non-existing column is requested', function () {
         Flamingo::class,
     );
 
-    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request()));
+    $response = TestResponse::fromBaseResponse($queryBuilder->toResponse(new Request));
 
     $response->assertDownload('export.csv');
 });

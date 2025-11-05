@@ -7,9 +7,7 @@ use Clickbar\AgGrid\Contracts\AgGridValueFormatter;
 
 class AgGridArrayFormatter implements AgGridValueFormatter
 {
-    public function __construct(private readonly string $separator = ',', private readonly ?AgGridValueFormatter $itemFormatter = null)
-    {
-    }
+    public function __construct(private readonly string $separator = ',', private readonly ?AgGridValueFormatter $itemFormatter = null) {}
 
     public function format(AgGridFormatterContext $context, $value): ?string
     {
