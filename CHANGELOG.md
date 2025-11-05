@@ -4,6 +4,8 @@ All notable changes to `ag-grid-laravel` will be documented in this file.
 
 ## Unreleased
 
+## 0.3.0 (2025-11-05)
+
 - Added support for Laravel 11 & 12
 - Added support for nested relations in filters
 - Added support for set values handling
