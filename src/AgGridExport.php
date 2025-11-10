@@ -4,6 +4,7 @@ namespace Clickbar\AgGrid;
 
 use Clickbar\AgGrid\Contracts\AgGridExportable;
 use Clickbar\AgGrid\Contracts\AgGridExportTimezoneProvider;
+use Clickbar\AgGrid\Contracts\AgGridHasVirtualColumns;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
@@ -26,6 +27,9 @@ class AgGridExport implements FromQuery, ShouldAutoSize, WithColumnFormatting, W
 
     private readonly array $columnsToExport;
 
+    /** @var array<string, AgGridVirtualColumn> */
+    private array $virtualColumns = [];
+
     public function __construct(
         private readonly Builder|Relation $queryBuilder,
         ?array $columnsToExport = null
@@ -36,8 +40,11 @@ class AgGridExport implements FromQuery, ShouldAutoSize, WithColumnFormatting, W
             throw new \InvalidArgumentException('The model must implement the AgGridExportable interface.');
         }
 
-        $this->columnDefinitions = collect($model->getAgGridColumnDefinitions())->keyBy('id');
+        if ($model instanceof AgGridHasVirtualColumns) {
+            $this->virtualColumns = $model->getVirtualColumns();
+        }
 
+        $this->columnDefinitions = collect($model->getAgGridColumnDefinitions())->keyBy('id');
         $this->columnsToExport = $columnsToExport ?? $this->columnDefinitions->keys()->all();
 
         $timezone = null;
@@ -71,6 +78,10 @@ class AgGridExport implements FromQuery, ShouldAutoSize, WithColumnFormatting, W
         return array_map(function (string $column) use ($row) {
             /** @var AgGridColumnDefinition $columDefinition */
             $columDefinition = $this->columnDefinitions[$column];
+
+            if (array_key_exists($column, $this->virtualColumns)) {
+                $row[$column] = $this->virtualColumns[$column]->getValue($row);
+            }
 
             if ($columDefinition->valueGetter !== null) {
                 $value = $columDefinition->valueGetter->call($row, $row);
