@@ -4,6 +4,8 @@ All notable changes to `ag-grid-laravel` will be documented in this file.
 
 ## Unreleased
 
+## 0.4.0 (2026-05-27)
+
 - Added support for Laravel 13
 - Secured GitHub Actions
 - Removed unused Actions
