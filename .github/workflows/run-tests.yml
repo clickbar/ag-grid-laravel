@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -39,7 +42,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: postgres:18@sha256:8ff36f3c66371cba71d20ceedccfc3de9669a68737607888c4ef0af93abe8e39
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_HOST_AUTH_METHOD: trust
@@ -58,7 +61,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # 2.37.1
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
