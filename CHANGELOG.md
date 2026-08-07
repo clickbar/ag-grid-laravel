@@ -4,7 +4,9 @@ All notable changes to `ag-grid-laravel` will be documented in this file.
 
 ## Unreleased
 
-- Add Support for PHP 8.5
+## 0.5.0 (2026-08-07)
+
+- Add support for PHP 8.5
 - Upgrade Laravel Excel to 4.x-dev (needed for PHP 8.5 support)
 - Remove support for Laravel 11 and below
 - Remove support for PHP 8.2 and below
