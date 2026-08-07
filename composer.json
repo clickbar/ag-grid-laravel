@@ -22,7 +22,7 @@
     ],
     "require": {
         "php": "^8.1|^8.2|^8.3|^8.4|^8.5",
-        "illuminate/contracts": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
         "maatwebsite/excel": "^4.x-dev",
         "spatie/laravel-package-tools": "^1.14.0"
     },
