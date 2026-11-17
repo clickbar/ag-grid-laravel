@@ -3,6 +3,7 @@
 namespace Clickbar\AgGrid;
 
 use Clickbar\AgGrid\Contracts\AgGridCustomFilterable;
+use Clickbar\AgGrid\Contracts\AgGridFilterable;
 use Clickbar\AgGrid\Enums\AgGridDateFilterType;
 use Clickbar\AgGrid\Enums\AgGridExportFormat;
 use Clickbar\AgGrid\Enums\AgGridFilterType;
@@ -10,6 +11,7 @@ use Clickbar\AgGrid\Enums\AgGridNumberFilterType;
 use Clickbar\AgGrid\Enums\AgGridRowModel;
 use Clickbar\AgGrid\Enums\AgGridTextFilterType;
 use Clickbar\AgGrid\Exceptions\InvalidSetValueOperation;
+use Clickbar\AgGrid\Exceptions\UnauthorizedColumn;
 use Clickbar\AgGrid\Exceptions\UnauthorizedSetFilterColumn;
 use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
 use Clickbar\AgGrid\Requests\AgGridSetValuesRequest;
@@ -37,13 +39,18 @@ class AgGridQueryBuilder implements Responsable
 
     protected EloquentBuilder|Relation $subject;
 
+    /** @var string[] */
+    protected array $allowedColumns;
+
     /** @var class-string<JsonResource> | null */
     protected ?string $resourceClass = null;
 
     /**
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
+     * @param  string[]|null  $allowedColumns  colIds clients may filter and sort by, ['*'] for every column
+     *                                         that is not hidden. Defaults to the model's AgGridFilterable list.
      */
-    public function __construct(array $params, EloquentBuilder|Relation|Model|string $subject)
+    public function __construct(array $params, EloquentBuilder|Relation|Model|string $subject, ?array $allowedColumns = null)
     {
         if (is_a($subject, Model::class, true)) {
             $subject = $subject::query();
@@ -53,6 +60,12 @@ class AgGridQueryBuilder implements Responsable
         $this->subject = $subject;
 
         $model = $subject->getModel();
+        $this->allowedColumns = $allowedColumns ?? match (true) {
+            $model instanceof AgGridFilterable => $model::getAgGridAllowedColumns(),
+            (bool) config('ag-grid.require_allowed_columns', false) => [],
+            default => ['*'],
+        };
+
         if ($model instanceof AgGridCustomFilterable) {
             $model->applyAgGridCustomFilters($this->subject, $this->params['customFilters'] ?? []);
         }
@@ -68,9 +81,9 @@ class AgGridQueryBuilder implements Responsable
      *
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
      */
-    public static function forRequest(AgGridGetRowsRequest $request, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
+    public static function forRequest(AgGridGetRowsRequest $request, EloquentBuilder|Relation|Model|string $subject, ?array $allowedColumns = null): AgGridQueryBuilder
     {
-        return new AgGridQueryBuilder($request->validated(), $subject);
+        return new AgGridQueryBuilder($request->validated(), $subject, $allowedColumns);
     }
 
     /**
@@ -78,9 +91,9 @@ class AgGridQueryBuilder implements Responsable
      *
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
      */
-    public static function forSetValuesRequest(AgGridSetValuesRequest $request, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
+    public static function forSetValuesRequest(AgGridSetValuesRequest $request, EloquentBuilder|Relation|Model|string $subject, ?array $allowedColumns = null): AgGridQueryBuilder
     {
-        return new AgGridQueryBuilder($request->validated(), $subject);
+        return new AgGridQueryBuilder($request->validated(), $subject, $allowedColumns);
     }
 
     /**
@@ -88,9 +101,9 @@ class AgGridQueryBuilder implements Responsable
      *
      * @param  EloquentBuilder|Relation|Model|class-string<Model>  $subject
      */
-    public static function forSelection(array $selection, EloquentBuilder|Relation|Model|string $subject): AgGridQueryBuilder
+    public static function forSelection(array $selection, EloquentBuilder|Relation|Model|string $subject, ?array $allowedColumns = null): AgGridQueryBuilder
     {
-        return new AgGridQueryBuilder($selection, $subject);
+        return new AgGridQueryBuilder($selection, $subject, $allowedColumns);
     }
 
     public function getQuery(): QueryBuilder
@@ -124,11 +137,16 @@ class AgGridQueryBuilder implements Responsable
             throw InvalidSetValueOperation::make();
         }
 
-        if (collect($allowedColumns)->first() !== '*' && ! in_array($colId, $allowedColumns)) {
+        $isWildcard = collect($allowedColumns)->first() === '*';
+        if (! $isWildcard && ! in_array($colId, $allowedColumns)) {
             throw UnauthorizedSetFilterColumn::make($colId);
         }
 
         $column = Column::fromColId($this->subject, $colId);
+
+        if ($isWildcard && $column->isHidden()) {
+            throw UnauthorizedSetFilterColumn::make($colId);
+        }
 
         if ($column->hasRelations()) {
 
@@ -265,7 +283,7 @@ class AgGridQueryBuilder implements Responsable
 
         foreach ($filters as $colId => $filter) {
 
-            $column = Column::fromColId($this->subject, $colId);
+            $column = $this->resolveAllowedColumn($colId);
 
             if ($column->hasRelations()) {
                 $this->subject->whereHas($column->getDottedRelation(), function (EloquentBuilder $builder) use ($column, $filter) {
@@ -291,12 +309,34 @@ class AgGridQueryBuilder implements Responsable
         }
 
         foreach ($sorts as $sort) {
-            $column = Column::fromColId($this->subject, $sort['colId']);
+            $column = $this->resolveAllowedColumn($sort['colId']);
             $this->subject->orderBy($column->getNameAsJsonPath(), $sort['sort']);
         }
 
         // we need an additional sort condition so that the order is stable in all cases
         $this->subject->orderBy($this->subject->getModel()->getKeyName());
+    }
+
+    /**
+     * Filter and sort keys come from the client, so they may only name allowed columns. The wildcard
+     * still refuses hidden columns and relations, since the row count reveals whether a filter matched
+     * even when the value itself is never serialized.
+     */
+    protected function resolveAllowedColumn(string $colId): Column
+    {
+        $isWildcard = in_array('*', $this->allowedColumns, true);
+
+        if (! $isWildcard && ! in_array($colId, $this->allowedColumns, true)) {
+            throw UnauthorizedColumn::make($colId);
+        }
+
+        $column = Column::fromColId($this->subject, $colId);
+
+        if ($isWildcard && $column->isHidden()) {
+            throw UnauthorizedColumn::make($colId);
+        }
+
+        return $column;
     }
 
     protected function addLimitAndOffsetToQuery(): void

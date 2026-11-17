@@ -29,7 +29,14 @@ return [
      * The class that contains the provider for determining the timezone 
      * to use for DateTime formatting in exports.
      */
-    'export_timezone_provider' => \Clickbar\AgGrid\AgGridDefaultExportTimezoneProvider::class
+    'export_timezone_provider' => \Clickbar\AgGrid\AgGridDefaultExportTimezoneProvider::class,
+
+    /*
+     * When true, grids refuse every filter and sort column unless the controller passes allowed
+     * columns or the model implements AgGridFilterable. When false, grids without an allowlist
+     * accept every column that is not hidden on its model. This becomes true in the next major version.
+     */
+    'require_allowed_columns' => false,
 ];
 ```
 
@@ -54,6 +61,30 @@ class FlamingoGridController extends Controller
     }
 }
 ```
+
+### Allowed columns
+
+The keys of `filterModel` and the `colId`s of `sortModel` come from the client. Every key the query builder accepts can be used to probe the database: even when a column is never part of the response, the `total` row count tells whether a filter such as `password startsWith "$2y$10$a"` matched. Declare the columns a grid may filter and sort by, including dotted relation and json paths:
+
+```php
+return AgGridQueryBuilder::forRequest($request, $query, ['name', 'species', 'keeper.name']);
+```
+
+Or declare them once on the model:
+
+```php
+class Flamingo extends Model implements AgGridFilterable
+{
+    public static function getAgGridAllowedColumns(): array
+    {
+        return ['name', 'species', 'keeper.name'];
+    }
+}
+```
+
+A column outside the list throws `UnauthorizedColumn` (HTTP 403). The same list applies to the filters sent with set values and selection requests.
+
+Without a list, the query builder accepts every column (`['*']`) except those hidden on their model through `$hidden` or `$visible`, and except paths through a hidden relation. Columns you name explicitly are always accepted, so name a hidden column when a grid really needs to filter by it. Set `require_allowed_columns` to `true` to refuse every column of grids without a list.
 
 ### Set Filter Values
 When using AG Grid with the `serverSide` row model, you are responsible for providing the values for the set value filter (the frontend only knows a subset of the whole data and therefore cannot know all possible set values).
@@ -80,7 +111,7 @@ You need to whitelist the columns the set filter values can be retrieved for. Th
 ->toSetValues(['name', 'kepper.name']);
 ```
 
-If your model does not expose any relations or sensitive columns, you can also use `['*']` as wildcard.
+If your model does not expose any relations or sensitive columns, you can also use `['*']` as wildcard. The wildcard refuses columns hidden on their model.
 
 Here's an example for the frontend implementation:
 

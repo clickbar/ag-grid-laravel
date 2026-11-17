@@ -38,7 +38,11 @@ class AgGridExport implements FromQuery, ShouldAutoSize, WithColumnFormatting, W
 
         $this->columnDefinitions = collect($model->getAgGridColumnDefinitions())->keyBy('id');
 
-        $this->columnsToExport = $columnsToExport ?? $this->columnDefinitions->keys()->all();
+        // Export columns come from the client, so only columns the model defines for export are read;
+        // anything else could reach hidden attributes or relations through data_get().
+        $this->columnsToExport = $columnsToExport === null
+            ? $this->columnDefinitions->keys()->all()
+            : array_values(array_filter($columnsToExport, fn ($column) => $this->columnDefinitions->has($column)));
 
         $timezone = null;
         $timezoneProviderClass = config('ag-grid.export_timezone_provider');
@@ -49,16 +53,6 @@ class AgGridExport implements FromQuery, ShouldAutoSize, WithColumnFormatting, W
         }
 
         $this->context = new AgGridFormatterContext(App::currentLocale(), $timezone);
-
-        // account for columns without a definition
-        $columnsWithoutDefinition = array_diff($this->columnsToExport, $this->columnDefinitions->keys()->all());
-        foreach ($columnsWithoutDefinition as $columnWithoutDefinition) {
-            // create temporary column definition that just returns the value as is
-            $this->columnDefinitions->put(
-                $columnWithoutDefinition,
-                new AgGridColumnDefinition($columnWithoutDefinition, $columnWithoutDefinition)
-            );
-        }
     }
 
     public function query(): Relation|Builder

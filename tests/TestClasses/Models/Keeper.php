@@ -13,6 +13,8 @@ class Keeper extends Model
 
     protected $guarded = [];
 
+    protected $hidden = ['secret'];
+
     protected $casts = [
         'created_at' => 'immutable_datetime',
         'updated_at' => 'immutable_datetime',

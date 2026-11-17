@@ -48,6 +48,7 @@ class TestCase extends Orchestra
         $db->connection()->getSchemaBuilder()->create('keepers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('secret')->nullable();
             $table->foreignId('zoo_id')->index()->constrained();
             $table->timestamps();
         });
