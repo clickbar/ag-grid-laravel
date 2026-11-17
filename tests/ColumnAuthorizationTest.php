@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Testing\TestResponse;
 
 beforeEach(function () {
-    $this->keeper = Keeper::factory()->createOne(['secret' => 'hunter2']);
+    $this->keeper = Keeper::factory()->createOne(['secret' => 'hunter2', 'credentials' => ['token' => 'tok_1']]);
     $this->flamingos = Flamingo::factory()->count(3)->for($this->keeper)->create();
     Flamingo::factory()->count(2)->for(Keeper::factory()->state(['secret' => 'other']))->create();
 });
@@ -26,7 +26,7 @@ it('refuses filters on hidden columns', function (string $subject, string $colId
     'own column' => [Keeper::class, 'secret'],
     'related column' => [Flamingo::class, 'keeper.secret'],
     'own column as json selector' => [Keeper::class, 'secret->token'],
-    'related column as json selector' => [Flamingo::class, 'keeper.secret->token'],
+    'related column as json selector' => [Flamingo::class, 'keeper.credentials->token'],
 ])->throws(UnauthorizedColumn::class);
 
 it('refuses sorts on hidden columns', function () {
@@ -53,6 +53,23 @@ it('filters allowlisted columns, including hidden ones the developer names expli
 
     expect($queryBuilder->get()->pluck('id')->sort()->values()->all())
         ->toBe($this->flamingos->pluck('id')->sort()->values()->all());
+});
+
+it('filters json selectors on visible columns and on hidden columns named explicitly', function () {
+    Flamingo::query()->whereKey($this->flamingos->first()->id)->update(['custom_properties' => ['color' => 'pink']]);
+
+    $visible = new AgGridQueryBuilder(
+        ['filterModel' => ['custom_properties->color' => ['filterType' => 'text', 'type' => 'equals', 'filter' => 'pink']]],
+        Flamingo::class,
+    );
+    $hidden = new AgGridQueryBuilder(
+        ['filterModel' => ['keeper.credentials->token' => ['filterType' => 'text', 'type' => 'equals', 'filter' => 'tok_1']]],
+        Flamingo::class,
+        ['keeper.credentials->token'],
+    );
+
+    expect($visible->pluck('id')->all())->toBe([$this->flamingos->first()->id])
+        ->and($hidden->count())->toBe($this->flamingos->count());
 });
 
 it('accepts hidden columns named next to the wildcard', function () {

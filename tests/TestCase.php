@@ -49,6 +49,7 @@ class TestCase extends Orchestra
             $table->id();
             $table->string('name');
             $table->string('secret')->nullable();
+            $table->jsonb('credentials')->nullable();
             $table->foreignId('zoo_id')->index()->constrained();
             $table->timestamps();
         });
