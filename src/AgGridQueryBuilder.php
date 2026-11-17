@@ -144,7 +144,7 @@ class AgGridQueryBuilder implements Responsable
 
         $column = Column::fromColId($this->subject, $colId);
 
-        if ($isWildcard && $column->isHidden()) {
+        if ($isWildcard && ! in_array($colId, $allowedColumns, true) && $column->isHidden()) {
             throw UnauthorizedSetFilterColumn::make($colId);
         }
 
@@ -332,7 +332,7 @@ class AgGridQueryBuilder implements Responsable
 
         $column = Column::fromColId($this->subject, $colId);
 
-        if ($isWildcard && $column->isHidden()) {
+        if ($isWildcard && ! in_array($colId, $this->allowedColumns, true) && $column->isHidden()) {
             throw UnauthorizedColumn::make($colId);
         }
 

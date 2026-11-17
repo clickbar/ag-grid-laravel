@@ -25,6 +25,8 @@ it('refuses filters on hidden columns', function (string $subject, string $colId
 })->with([
     'own column' => [Keeper::class, 'secret'],
     'related column' => [Flamingo::class, 'keeper.secret'],
+    'own column as json selector' => [Keeper::class, 'secret->token'],
+    'related column as json selector' => [Flamingo::class, 'keeper.secret->token'],
 ])->throws(UnauthorizedColumn::class);
 
 it('refuses sorts on hidden columns', function () {
@@ -51,6 +53,16 @@ it('filters allowlisted columns, including hidden ones the developer names expli
 
     expect($queryBuilder->get()->pluck('id')->sort()->values()->all())
         ->toBe($this->flamingos->pluck('id')->sort()->values()->all());
+});
+
+it('accepts hidden columns named next to the wildcard', function () {
+    $queryBuilder = new AgGridQueryBuilder(
+        ['filterModel' => ['keeper.secret' => secretFilter('hun')]],
+        Flamingo::class,
+        ['*', 'keeper.secret'],
+    );
+
+    expect($queryBuilder->get()->count())->toBe($this->flamingos->count());
 });
 
 it('refuses every column without an allowlist when the config requires one', function () {

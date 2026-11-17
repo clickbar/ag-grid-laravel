@@ -129,14 +129,16 @@ class Column
         $model = $this->baseModel;
 
         foreach ($this->relations as $relation) {
-            if (self::isHiddenOn($model, $relation->name) || self::isHiddenOn($model, Str::snake($relation->name))) {
+            // Eloquent serializes relations under their method name, but $hidden is often written in snake case.
+            if (self::isHiddenOn($model, $relation->name) || in_array(Str::snake($relation->name), $model->getHidden(), true)) {
                 return true;
             }
 
             $model = $relation->model;
         }
 
-        return self::isHiddenOn($model, $this->getAttribute());
+        // Laravel also reads `column->path` as a json selector, so that form must not bypass the check.
+        return self::isHiddenOn($model, Str::before(str_replace('->', '.', $this->name), '.'));
     }
 
     protected static function isHiddenOn(Model $model, string $key): bool
