@@ -154,7 +154,8 @@ class AgGridQueryBuilder implements Responsable
 
             return $this->subject->with($dottedRelation)
                 ->get()
-                ->map(fn (Model $model) => Arr::get($this->traverse($model, $dottedRelation)->toArray(), $column->getName()))
+                // Hidden columns only get here when allowed explicitly, so serialize the requested one too.
+                ->map(fn (Model $model) => Arr::get($this->traverse($model, $dottedRelation)->makeVisible($column->getAttribute())->toArray(), $column->getName()))
                 ->unique()
                 ->sort()
                 ->values();

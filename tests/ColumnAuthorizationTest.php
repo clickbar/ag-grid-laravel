@@ -82,6 +82,12 @@ it('refuses set values for hidden columns under the wildcard', function () {
     (new AgGridQueryBuilder(['column' => 'keeper.secret'], Flamingo::class))->toSetValues(['*']);
 })->throws(UnauthorizedSetFilterColumn::class);
 
+it('returns set values for hidden columns named explicitly', function () {
+    $values = (new AgGridQueryBuilder(['column' => 'keeper.secret'], Flamingo::class))->toSetValues(['keeper.secret']);
+
+    expect($values->all())->toBe(['hunter2', 'other']);
+});
+
 it('quotes json paths instead of running them as sql', function () {
     // Unquoted, the subquery would decide whether rows match; quoted, it names a column that does not exist.
     $colId = "'{}'::jsonb, 'q') is null and (select count(*) > 0 from keepers) and jsonb_extract_path('{\"a\":[\"x\"]}'::jsonb.a";
