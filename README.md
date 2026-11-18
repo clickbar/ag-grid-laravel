@@ -97,11 +97,14 @@ class FlamingoGridSetValuesController extends Controller
         $query = Flamingo::query()
             ->with(['keeper']);
     
-        return AgGridQueryBuilder::forSetValuesRequest($request, $query)
+        // The grid's allowed columns, which also apply to the filters sent with the request.
+        return AgGridQueryBuilder::forSetValuesRequest($request, $query, ['name', 'species', 'keeper.name'])
             ->toSetValues(['*']);
     }
 }
 ```
+The allowed columns passed to `forSetValuesRequest()` (or declared through `AgGridFilterable`) cover the filters of the request, like for row requests. The list passed to `toSetValues()` only decides which column the values may be retrieved for, so it does not satisfy `require_allowed_columns`.
+
 See the `AgGridSetValuesRequest` class for the structure of the request.
 
 **IMPORTANT**  

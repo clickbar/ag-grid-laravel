@@ -90,10 +90,12 @@ it('fails without an allowlist when the config requires one, even without filter
 })->throws(MissingAllowedColumns::class);
 
 it('applies the allowlist to the filters of a set values request', function () {
+    // name is visible, so only the grid allowlist can refuse it; the set values list does not cover filters.
     AgGridQueryBuilder::forSelection(
-        ['column' => 'name', 'filterModel' => ['keeper.secret' => secretFilter('hun')]],
+        ['column' => 'species', 'filterModel' => ['name' => secretFilter('a')]],
         Flamingo::class,
-    )->toSetValues(['name']);
+        ['species'],
+    )->toSetValues(['species', 'name']);
 })->throws(UnauthorizedColumn::class);
 
 it('treats the wildcard anywhere in the set values allowlist as the wildcard', function () {
