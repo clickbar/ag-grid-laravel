@@ -31,10 +31,7 @@ class Column
         if ($hasPathAccessor) {
             $this->isJsonColumn = true;
         } else {
-            $model = collect($this->relations)->last()->model ?? $this->baseModel;
-            $colum = Str::before($this->name, '.');
-
-            $this->isJsonColumn = $model->hasCast($colum, [
+            $this->isJsonColumn = $this->getModel()->hasCast($this->getAttribute(), [
                 'array',
                 'json',
                 'object',
@@ -108,6 +105,50 @@ class Column
     }
 
     /**
+     * Returns the model of the innermost relation, or the base model when the column has no relations.
+     */
+    public function getModel(): Model
+    {
+        return collect($this->relations)->last()->model ?? $this->baseModel;
+    }
+
+    /**
+     * Returns the attribute of the innermost model the column reads, without any json path.
+     */
+    public function getAttribute(): string
+    {
+        return Str::before($this->name, '.');
+    }
+
+    /**
+     * Returns true if the column or any relation on its path is hidden from the serialized model,
+     * through $hidden or a $visible list that does not name it.
+     */
+    public function isHidden(): bool
+    {
+        $model = $this->baseModel;
+
+        foreach ($this->relations as $relation) {
+            // Eloquent serializes relations under their method name, but $hidden is often written in snake case.
+            if (self::isHiddenOn($model, $relation->name) || in_array(Str::snake($relation->name), $model->getHidden(), true)) {
+                return true;
+            }
+
+            $model = $relation->model;
+        }
+
+        // Laravel also reads `column->path` as a json selector, so that form must not bypass the check.
+        return self::isHiddenOn($model, Str::before(str_replace('->', '.', $this->name), '.'));
+    }
+
+    protected static function isHiddenOn(Model $model, string $key): bool
+    {
+        $visible = $model->getVisible();
+
+        return in_array($key, $model->getHidden(), true) || ($visible !== [] && ! in_array($key, $visible, true));
+    }
+
+    /**
      * Returns the full colId, including all parent relations.
      */
     public function getColId(): string
@@ -156,11 +197,13 @@ class Column
             return $this->name;
         }
 
-        $column = Str::before($this->name, '.');
+        // The colId comes from the client, so the column and every path segment must be quoted.
+        $grammar = $this->getModel()->getConnection()->getQueryGrammar();
+        $column = $grammar->wrap($this->getAttribute());
         $pathValues = Str::of($this->name)
             ->after('.')
             ->explode('.')
-            ->implode(fn (string $part) => "'$part'", ', ');
+            ->implode(fn (string $part) => $grammar->escape($part), ', ');
 
         return DB::raw("jsonb_extract_path($column, $pathValues)");
     }

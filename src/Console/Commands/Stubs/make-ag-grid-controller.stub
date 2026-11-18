@@ -17,7 +17,8 @@ class {{ class }} extends Controller
     {
         $query = Model::query();
 
-        return AgGridQueryBuilder::forRequest($request, $query);
+        // The columns the grid may filter and sort by.
+        return AgGridQueryBuilder::forRequest($request, $query, ['id']);
     }
 
     /**
@@ -27,8 +28,8 @@ class {{ class }} extends Controller
     {
         $query = Model::query();
 
-        return AgGridQueryBuilder::forSetValuesRequest($request, $query)
-            ->toSetValues(['*']);
+        return AgGridQueryBuilder::forSetValuesRequest($request, $query, ['id'])
+            ->toSetValues(['id']);
     }
 
 }
