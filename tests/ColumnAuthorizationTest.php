@@ -1,6 +1,7 @@
 <?php
 
 use Clickbar\AgGrid\AgGridQueryBuilder;
+use Clickbar\AgGrid\Exceptions\MissingAllowedColumns;
 use Clickbar\AgGrid\Exceptions\UnauthorizedColumn;
 use Clickbar\AgGrid\Exceptions\UnauthorizedSetFilterColumn;
 use Clickbar\AgGrid\Tests\TestClasses\Models\Flamingo;
@@ -82,11 +83,11 @@ it('accepts hidden columns named next to the wildcard', function () {
     expect($queryBuilder->get()->count())->toBe($this->flamingos->count());
 });
 
-it('refuses every column without an allowlist when the config requires one', function () {
+it('fails without an allowlist when the config requires one, even without filters', function () {
     config(['ag-grid.require_allowed_columns' => true]);
 
-    new AgGridQueryBuilder(['filterModel' => ['name' => secretFilter('a')]], Flamingo::class);
-})->throws(UnauthorizedColumn::class);
+    new AgGridQueryBuilder([], Flamingo::class);
+})->throws(MissingAllowedColumns::class);
 
 it('applies the allowlist to the filters of a set values request', function () {
     AgGridQueryBuilder::forSelection(
@@ -94,6 +95,12 @@ it('applies the allowlist to the filters of a set values request', function () {
         Flamingo::class,
     )->toSetValues(['name']);
 })->throws(UnauthorizedColumn::class);
+
+it('treats the wildcard anywhere in the set values allowlist as the wildcard', function () {
+    $values = (new AgGridQueryBuilder(['column' => 'keeper.name'], Flamingo::class))->toSetValues(['name', '*']);
+
+    expect($values)->toHaveCount(2);
+});
 
 it('refuses set values for hidden columns under the wildcard', function () {
     (new AgGridQueryBuilder(['column' => 'keeper.secret'], Flamingo::class))->toSetValues(['*']);

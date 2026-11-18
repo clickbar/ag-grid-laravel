@@ -8,7 +8,7 @@ All notable changes to `ag-grid-laravel` will be documented in this file.
 - **Security:** Quote json paths in set filters. A crafted `filterModel` key could previously inject SQL.
 - **Security:** Exports only include columns from `getAgGridColumnDefinitions()`; requested columns without a definition are dropped instead of being read from the model.
 - Add allowed columns for filters and sorts: pass them to `forRequest()`, `forSetValuesRequest()`, `forSelection()` or the constructor, or implement `AgGridFilterable` on the model. Columns outside the list throw `UnauthorizedColumn`.
-- Add the `require_allowed_columns` config option to refuse every column of grids without allowed columns. It defaults to `false` and becomes `true` in the next major version.
+- Add the `require_allowed_columns` config option; grids without allowed columns then throw `MissingAllowedColumns`. It defaults to `false` and becomes `true` in the next major version.
 
 ## 0.5.0 (2026-08-07)
 

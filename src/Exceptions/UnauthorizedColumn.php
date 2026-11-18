@@ -8,11 +8,6 @@ class UnauthorizedColumn extends AccessDeniedHttpException
 {
     public static function make(string $column): self
     {
-        return new self(
-            sprintf(
-                'Column %s is not available or cannot be accessed',
-                $column
-            )
-        );
+        return new self("Column {$column} is not available or cannot be accessed");
     }
 }

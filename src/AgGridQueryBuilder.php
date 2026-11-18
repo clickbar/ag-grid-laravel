@@ -11,6 +11,7 @@ use Clickbar\AgGrid\Enums\AgGridNumberFilterType;
 use Clickbar\AgGrid\Enums\AgGridRowModel;
 use Clickbar\AgGrid\Enums\AgGridTextFilterType;
 use Clickbar\AgGrid\Exceptions\InvalidSetValueOperation;
+use Clickbar\AgGrid\Exceptions\MissingAllowedColumns;
 use Clickbar\AgGrid\Exceptions\UnauthorizedColumn;
 use Clickbar\AgGrid\Exceptions\UnauthorizedSetFilterColumn;
 use Clickbar\AgGrid\Requests\AgGridGetRowsRequest;
@@ -62,7 +63,8 @@ class AgGridQueryBuilder implements Responsable
         $model = $subject->getModel();
         $this->allowedColumns = $allowedColumns ?? match (true) {
             $model instanceof AgGridFilterable => $model::getAgGridAllowedColumns(),
-            (bool) config('ag-grid.require_allowed_columns', false) => [],
+            // A forgotten allowlist is a developer error, so it fails on every request, not only filtered ones.
+            (bool) config('ag-grid.require_allowed_columns', false) => throw MissingAllowedColumns::make($model::class),
             default => ['*'],
         };
 
@@ -137,8 +139,8 @@ class AgGridQueryBuilder implements Responsable
             throw InvalidSetValueOperation::make();
         }
 
-        $isWildcard = collect($allowedColumns)->first() === '*';
-        if (! $isWildcard && ! in_array($colId, $allowedColumns)) {
+        $isWildcard = in_array('*', $allowedColumns, true);
+        if (! $isWildcard && ! in_array($colId, $allowedColumns, true)) {
             throw UnauthorizedSetFilterColumn::make($colId);
         }
 
