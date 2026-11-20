@@ -22,6 +22,24 @@ export function getSetFilterParametersFor(
                     })
             },
             refreshValuesOnOpen,
+            keyCreator: (params) => {
+                if (typeof params.value === 'string'){
+                    return params.value
+                }
+                if (params.value === null){
+                    return null
+                }
+                return params.value.value
+            },
+            valueFormatter: (params) => {
+                if (typeof params.value === 'string'){
+                    return params.value
+                }
+                if (params.value === null){
+                    return null
+                }
+                return params.value.label
+            }
         },
     }
 }
